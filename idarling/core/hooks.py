@@ -21,6 +21,7 @@ import ida_idaapi
 import ida_idp
 import ida_kernwin
 import ida_nalt
+import idc
 import ida_netnode
 import ida_pro
 import ida_segment
@@ -532,7 +533,9 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
 
     def renamed(self, ea, new_name, local_name):
         self._plugin.logger.debug("renamed(ea = %x, new_name = %s, local_name = %d)" % (ea, new_name, local_name))
-        if idc.is_member_id(ea) or idc.get_struc(ea) or idc.get_enum_name(ea):
+        # `idc.get_struc` was removed in newer IDA Python APIs; avoid calling it.
+        # We only need to detect member-id or enum rename events here.
+        if idc.is_member_id(ea) or idc.get_enum_name(ea):
             # Drop hook to avoid duplicate since already handled by the following hooks:
             # - renaming_struc_member() -> sends 'StrucMemberRenamedEvent'
             # - renaming_struc() -> sends 'StrucRenamedEvent' 

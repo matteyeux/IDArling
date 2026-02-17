@@ -21,7 +21,7 @@ import ida_kernwin
 import ida_netnode
 import ida_typeinf
 
-from PyQt5.QtCore import QCoreApplication, QFileInfo  # noqa: I202
+from PySide6.QtCore import QCoreApplication, QFileInfo  # noqa: I202
 
 from .hooks import HexRaysHooks, IDBHooks, IDPHooks, UIHooks
 from ..module import Module

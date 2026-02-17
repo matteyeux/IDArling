@@ -131,8 +131,13 @@ class RenamedEvent(Event):
             self.ea, self.new_name, flags | ida_name.SN_NOWARN
         )
         ida_kernwin.request_refresh(ida_kernwin.IWID_DISASMS)
-        ida_kernwin.request_refresh(ida_kernwin.IWID_STRUCTS)
         ida_kernwin.request_refresh(ida_kernwin.IWID_STKVIEW)
+
+        if hasattr(ida_kernwin, "IWID_STRUCTS"):
+            ida_kernwin.request_refresh(ida_kernwin.IWID_STRUCTS)
+        else:
+            ida_kernwin.refresh_idaview_anyway()
+
         HexRaysEvent.refresh_pseudocode_view(self.ea)
 
 
