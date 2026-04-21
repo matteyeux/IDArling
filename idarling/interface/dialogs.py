@@ -41,7 +41,9 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QTabWidget,
     QVBoxLayout,
-    QWidget, QSizePolicy, QFileDialog,
+    QWidget,
+    QSizePolicy,
+    QFileDialog,
 )
 
 # QHeaderView enum compatibility between PyQt5 and PySide6
@@ -101,9 +103,7 @@ class OpenDialog(QDialog):
         self._projects_table.verticalHeader().setVisible(False)
         self._projects_table.setSelectionBehavior(QTableWidget.SelectRows)
         self._projects_table.setSelectionMode(QTableWidget.SingleSelection)
-        self._projects_table.itemSelectionChanged.connect(
-            self._project_clicked
-        )
+        self._projects_table.itemSelectionChanged.connect(self._project_clicked)
         self._left_layout.addWidget(self._projects_table)
         main_layout.addWidget(self._left_side, 0, 0)
         main_layout.setColumnStretch(0, 1)
@@ -123,15 +123,15 @@ class OpenDialog(QDialog):
         self._binaries_table.verticalHeader().setVisible(False)
         self._binaries_table.setSelectionBehavior(QTableWidget.SelectRows)
         self._binaries_table.setSelectionMode(QTableWidget.SingleSelection)
-        self._binaries_table.itemClicked.connect(
-            self._binary_clicked
-        )
+        self._binaries_table.itemClicked.connect(self._binary_clicked)
         self._middle_layout.addWidget(self._binaries_table)
         main_layout.addWidget(self._middle_side, 0, 1)
         main_layout.setColumnStretch(1, 1)
 
         # Create a binary button
-        self._rename_binary_button = QPushButton("Rename Binary File", self._middle_side)
+        self._rename_binary_button = QPushButton(
+            "Rename Binary File", self._middle_side
+        )
         self._rename_binary_button.setEnabled(False)
         self._rename_binary_button.clicked.connect(self._rename_binary_button_clicked)
         self._middle_layout.addWidget(self._rename_binary_button)
@@ -140,9 +140,7 @@ class OpenDialog(QDialog):
             "Delete Binary File", self._middle_side
         )
         self._delete_binary_button.setEnabled(False)
-        self._delete_binary_button.clicked.connect(
-            self._delete_binary_clicked
-        )
+        self._delete_binary_button.clicked.connect(self._delete_binary_clicked)
         self._middle_layout.addWidget(self._delete_binary_button)
 
         # Snapshots - right layout
@@ -176,21 +174,15 @@ class OpenDialog(QDialog):
         self._snapshots_table.verticalHeader().setVisible(False)
         self._snapshots_table.setSelectionBehavior(QTableWidget.SelectRows)
         self._snapshots_table.setSelectionMode(QTableWidget.SingleSelection)
-        self._snapshots_table.itemSelectionChanged.connect(
-            self._snapshot_clicked
-        )
-        self._snapshots_table.itemDoubleClicked.connect(
-            self._snapshot_double_clicked
-        )
+        self._snapshots_table.itemSelectionChanged.connect(self._snapshot_clicked)
+        self._snapshots_table.itemDoubleClicked.connect(self._snapshot_double_clicked)
         self._snapshots_layout.addWidget(self._snapshots_table)
 
         self._delete_snapshot_button = QPushButton(
             "Delete Database Snapshot", self._snapshots_project
         )
         self._delete_snapshot_button.setEnabled(False)
-        self._delete_snapshot_button.clicked.connect(
-            self._delete_snapshot_clicked
-        )
+        self._delete_snapshot_button.clicked.connect(self._delete_snapshot_clicked)
         self._snapshots_layout.addWidget(self._delete_snapshot_button)
         right_layout.addWidget(self._snapshots_project)
 
@@ -224,8 +216,10 @@ class OpenDialog(QDialog):
 
     def _projects_listed(self, reply):
         """Called when the projects list is received."""
-        self._projects = sorted(reply.projects, key=lambda x: x.name) # sort projects by name
-        #self._projects = sorted(reply.projects, key=lambda x: x.date, reverse=True) # sort projects by reverse date
+        self._projects = sorted(
+            reply.projects, key=lambda x: x.name
+        )  # sort projects by name
+        # self._projects = sorted(reply.projects, key=lambda x: x.date, reverse=True) # sort projects by reverse date
         self._refresh_projects()
 
     def _refresh_projects(self):
@@ -263,16 +257,21 @@ class OpenDialog(QDialog):
                     self._projects.remove(e)
             self._refresh_projects()
         else:
-            QMessageBox.about(self, "IDArling Error", "Unable to delete.\n"
-                                                      "Likely more than one client connected to target?")
+            QMessageBox.about(
+                self,
+                "IDArling Error",
+                "Unable to delete.\nLikely more than one client connected to target?",
+            )
 
     ##### BINARIES #####
 
     def _binaries_listed(self, reply):
         self._plugin.logger.debug("OpenDialog._binaries_listed()")
         """Called when the binaries list is received."""
-        self._binaries = sorted(reply.binaries, key=lambda x: x.name) # sort binary by name
-        #self._binaries = sorted(reply.binaries, key=lambda x: x.date, reverse=True) # sort binary by reverse date
+        self._binaries = sorted(
+            reply.binaries, key=lambda x: x.name
+        )  # sort binary by name
+        # self._binaries = sorted(reply.binaries, key=lambda x: x.date, reverse=True) # sort binary by reverse date
         self._refresh_binaries()
 
     def _refresh_binaries(self):
@@ -304,7 +303,9 @@ class OpenDialog(QDialog):
         self._date_label.setText("<b>Date:</b> %s" % str(binary.date))
 
         # Ask the server for the list of snapshots
-        d = self._plugin.network.send_packet(ListSnapshots.Query(project.name, binary.name))
+        d = self._plugin.network.send_packet(
+            ListSnapshots.Query(project.name, binary.name)
+        )
         d.add_callback(partial(self._snapshots_listed))
         d.add_errback(self._plugin.logger.exception)
         self._rename_binary_button.setEnabled(True)
@@ -318,7 +319,9 @@ class OpenDialog(QDialog):
             self._plugin.logger.info("No selected item 2")
             return
         binary = binary_items[0].data(Qt.UserRole)
-        d = self._plugin.network.send_packet(DeleteBinary.Query(project.name, binary.name))
+        d = self._plugin.network.send_packet(
+            DeleteBinary.Query(project.name, binary.name)
+        )
         d.add_callback(partial(self._binary_deleted, binary))
         d.add_errback(self._plugin.logger.exception)
 
@@ -330,8 +333,11 @@ class OpenDialog(QDialog):
             self._refresh_binaries()
             self._snapshots_table.clearContents()
         else:
-            QMessageBox.about(self, "IDArling Error", "Unable to delete.\n"
-                                                      "Likely more than one client connected to target?")
+            QMessageBox.about(
+                self,
+                "IDArling Error",
+                "Unable to delete.\nLikely more than one client connected to target?",
+            )
 
     def _rename_binary_button_clicked(self, _):
         current_binary = self._binaries_table.selectedItems()[0].data(Qt.UserRole).name
@@ -343,9 +349,14 @@ class OpenDialog(QDialog):
         project = self._projects_table.selectedItems()[0].data(Qt.UserRole).name
         old_name = self._binaries_table.selectedItems()[0].data(Qt.UserRole).name
         new_name = dialog.get_result()
-        self._plugin.logger.info("Request to rename to %s to %s in project: %s" % (old_name, new_name, project))
+        self._plugin.logger.info(
+            "Request to rename to %s to %s in project: %s"
+            % (old_name, new_name, project)
+        )
         # Send the packet to the server with the new name
-        d = self._plugin.network.send_packet(RenameBinary.Query(project, old_name, new_name))
+        d = self._plugin.network.send_packet(
+            RenameBinary.Query(project, old_name, new_name)
+        )
         d.add_callback(self._binary_renamed)
         d.add_errback(self._plugin.logger.exception)
 
@@ -356,8 +367,11 @@ class OpenDialog(QDialog):
             self._refresh_binaries()
         else:
             self._plugin.logger.debug("Create binary dialog")
-            QMessageBox.about(self, "IDArling Error", "Unable to rename.\n"
-                    "Likely more than one client connected?")
+            QMessageBox.about(
+                self,
+                "IDArling Error",
+                "Unable to rename.\nLikely more than one client connected?",
+            )
 
     ##### SNAPSHOTS #####
 
@@ -379,12 +393,8 @@ class OpenDialog(QDialog):
 
         self._snapshots_table.setRowCount(len(self._snapshots))
         for i, snapshot in enumerate(self._snapshots):
-            self._snapshots_table.setItem(
-                i, 0, create_item(snapshot.name, snapshot)
-            )
-            self._snapshots_table.setItem(
-                i, 1, create_item(snapshot.date, snapshot)
-            )
+            self._snapshots_table.setItem(i, 0, create_item(snapshot.name, snapshot))
+            self._snapshots_table.setItem(i, 1, create_item(snapshot.date, snapshot))
             tick = str(snapshot.tick) if snapshot.tick != -1 else "<none>"
             self._snapshots_table.setItem(i, 2, create_item(tick, snapshot))
 
@@ -401,7 +411,9 @@ class OpenDialog(QDialog):
             return
         binary = binary_items[0].data(Qt.UserRole)
         snapshot = self._snapshots_table.selectedItems()[0].data(Qt.UserRole)
-        d = self._plugin.network.send_packet(DeleteSnapshot.Query(project.name, binary.name, snapshot.name))
+        d = self._plugin.network.send_packet(
+            DeleteSnapshot.Query(project.name, binary.name, snapshot.name)
+        )
         d.add_callback(partial(self._snapshot_deleted, snapshot))
         d.add_errback(self._plugin.logger.exception)
 
@@ -412,22 +424,29 @@ class OpenDialog(QDialog):
                     self._snapshots.remove(e)
             self._refresh_snapshots()
         else:
-            QMessageBox.about(self, "IDArling Error", "Unable to delete.\n"
-                                                      "Likely more than one client connected to target?")
+            QMessageBox.about(
+                self,
+                "IDArling Error",
+                "Unable to delete.\nLikely more than one client connected to target?",
+            )
 
     def _snapshot_double_clicked(self):
         binary_type = self._binaries_table.selectedItems()[0].data(Qt.UserRole).type
         # For now we are only detecting some bad matching between IDA architecture
-        # and the disassembled binary's architecture but we would need to 
+        # and the disassembled binary's architecture but we would need to
         # actually save a binary architecture (32-bit or 64-bit) to support all
         # cases
-        # E.g. below we support "Portable executable for 80386 (PE)" vs 
+        # E.g. below we support "Portable executable for 80386 (PE)" vs
         # "Portable executable for AMD64 (PE)"
         # ida.exe vs ida64.exe can be determined using idc.BADADDR trick
-        if (idc.BADADDR == 0xffffffffffffffff and "80386" in binary_type) \
-         or (idc.BADADDR == 0xffffffff and "AMD64" in binary_type):
-            QMessageBox.about(self, "IDArling Error", "Wrong architecture!\n"
-                    "You must use the right version of IDA/IDA64,")
+        if (idc.BADADDR == 0xFFFFFFFFFFFFFFFF and "80386" in binary_type) or (
+            idc.BADADDR == 0xFFFFFFFF and "AMD64" in binary_type
+        ):
+            QMessageBox.about(
+                self,
+                "IDArling Error",
+                "Wrong architecture!\nYou must use the right version of IDA/IDA64,",
+            )
             return
         self.accept()
 
@@ -442,12 +461,15 @@ class OpenDialog(QDialog):
 
     # XXX - Make x.name configurable based on clicking on columns
     def sort_binaries(self, binaries):
-        #return sorted(binaries, key=lambda x: x.date, reverse=True) # sort binary by reverse date
+        # return sorted(binaries, key=lambda x: x.date, reverse=True) # sort binary by reverse date
         return sorted(binaries, key=lambda x: x.name)
 
     # XXX - Make x.date configurable based on clicking on columns
     def sort_snapshots(self, snapshots):
-        return sorted(snapshots, key=lambda x: x.date, reverse=True) # sort snapshots by reverse date
+        return sorted(
+            snapshots, key=lambda x: x.date, reverse=True
+        )  # sort snapshots by reverse date
+
 
 class SaveDialog(OpenDialog):
     """
@@ -478,9 +500,7 @@ class SaveDialog(OpenDialog):
             "Create Binary File", self._middle_side
         )
         self._create_binary_button.setEnabled(False)
-        self._create_binary_button.clicked.connect(
-            self._create_binary_clicked
-        )
+        self._create_binary_button.clicked.connect(self._create_binary_clicked)
         self._middle_layout.addWidget(self._create_binary_button)
 
         # Add a button to create a snapshot
@@ -488,9 +508,7 @@ class SaveDialog(OpenDialog):
             "Create Database Snapshot", self._snapshots_project
         )
         self._create_snapshot_button.setEnabled(False)
-        self._create_snapshot_button.clicked.connect(
-            self._create_snapshot_clicked
-        )
+        self._create_snapshot_button.clicked.connect(self._create_snapshot_clicked)
         self._snapshots_layout.addWidget(self._create_snapshot_button)
 
     ##### PROJECTS #####
@@ -505,9 +523,7 @@ class SaveDialog(OpenDialog):
 
     def _project_clicked(self):
         super(SaveDialog, self)._project_clicked()
-        self._project = self._projects_table.selectedItems()[0].data(
-            Qt.UserRole
-        )
+        self._project = self._projects_table.selectedItems()[0].data(Qt.UserRole)
         self._create_binary_button.setEnabled(True)
 
     def _create_project_clicked(self):
@@ -558,10 +574,10 @@ class SaveDialog(OpenDialog):
             return  # no binary in the project yet
 
         hash = ida_nalt.retrieve_input_file_md5()
-        if hash.endswith(b'\x00'):
+        if hash.endswith(b"\x00"):
             hash = hash[0:-1]
         # This decode is safe, because we have an hash in hex format
-        hash = binascii.hexlify(hash).decode('utf-8')
+        hash = binascii.hexlify(hash).decode("utf-8")
         for row in range(self._binaries_table.rowCount()):
             item = self._binaries_table.item(row, 0)
             binary = item.data(Qt.UserRole)
@@ -604,10 +620,10 @@ class SaveDialog(OpenDialog):
         # Get all the information we need and sent it to the server
         hash = ida_nalt.retrieve_input_file_md5()
         # Remove the trailing null byte, if exists
-        if hash.endswith(b'\x00'):
+        if hash.endswith(b"\x00"):
             hash = hash[0:-1]
         # This decode is safe, because we have an hash in hex format
-        hash = binascii.hexlify(hash).decode('utf-8')
+        hash = binascii.hexlify(hash).decode("utf-8")
         file = ida_nalt.get_root_filename()
         ftype = ida_loader.get_file_type_name()
         date_format = "%Y/%m/%d %H:%M"
@@ -637,9 +653,7 @@ class SaveDialog(OpenDialog):
     def _create_snapshot_clicked(self):
         """Called when the create snapshot button is clicked."""
         dialog = CreateSnapshotDialog(self._plugin)
-        dialog.accepted.connect(
-            partial(self._create_snapshot_accepted, dialog)
-        )
+        dialog.accepted.connect(partial(self._create_snapshot_accepted, dialog))
         dialog.exec_()
 
     def _create_snapshot_accepted(self, dialog):
@@ -673,6 +687,7 @@ class SaveDialog(OpenDialog):
         row = len(self._snapshots) - 1
         self._snapshots_table.selectRow(row)
 
+
 class CreateProjectDialog(QDialog):
     """The dialog shown when an user wants to create a project."""
 
@@ -693,7 +708,9 @@ class CreateProjectDialog(QDialog):
         self._nameLabel = QLabel("<b>Project Name</b>")
         layout.addWidget(self._nameLabel)
         self._nameEdit = QLineEdit()
-        self._nameEdit.setValidator(QRegularExpressionValidator(QRegularExpression("[a-zA-Z0-9-]+")))
+        self._nameEdit.setValidator(
+            QRegularExpressionValidator(QRegularExpression("[a-zA-Z0-9-]+"))
+        )
         layout.addWidget(self._nameEdit)
 
         buttons = QWidget(self)
@@ -718,7 +735,7 @@ class CreateBinaryDialog(CreateProjectDialog):
 
     def __init__(self, plugin):
         super(CreateBinaryDialog, self).__init__(plugin)
-        #self._plugin.logger.debug("Create binary dialog")
+        # self._plugin.logger.debug("Create binary dialog")
         self.setWindowTitle("Create Binary File")
         self._nameLabel.setText("<b>Binary Name</b>")
 
@@ -731,7 +748,7 @@ class CreateSnapshotDialog(CreateProjectDialog):
 
     def __init__(self, plugin):
         super(CreateSnapshotDialog, self).__init__(plugin)
-        #self._plugin.logger.debug("Create snapshot dialog")
+        # self._plugin.logger.debug("Create snapshot dialog")
         self.setWindowTitle("Create Database Snapshot")
         self._nameLabel.setText("<b>Snapshot Name</b>")
 
@@ -878,10 +895,10 @@ class SettingsDialog(QDialog):
             item = QTableWidgetItem("%s:%d" % (server["host"], server["port"]))
             item.setData(Qt.UserRole, server)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            # XXX - This prevented editing a server entry for your current 
-            # server because the row cannot be selected properly with 
+            # XXX - This prevented editing a server entry for your current
+            # server because the row cannot be selected properly with
             # SingleSelection option selected
-            #if self._plugin.network.server == server:
+            # if self._plugin.network.server == server:
             #    item.setFlags((item.flags() & ~Qt.ItemIsSelectable))
             self._servers_table.setItem(i, 0, item)
 
@@ -901,8 +918,7 @@ class SettingsDialog(QDialog):
             auto_checkbox.setFlags((auto_checkbox.flags() & ~Qt.ItemIsUserCheckable))
             self._servers_table.setItem(i, 2, auto_checkbox)
 
-        self._servers_table.setHorizontalHeaderLabels(("Servers", "SSL",
-                    "Auto"))
+        self._servers_table.setHorizontalHeaderLabels(("Servers", "SSL", "Auto"))
         horizontal_header = self._servers_table.horizontalHeader()
         horizontal_header.setSectionsClickable(False)
         horizontal_header.setSectionResizeMode(0, _HV_Stretch)
@@ -912,9 +928,7 @@ class SettingsDialog(QDialog):
         self._servers_table.setSelectionBehavior(QTableWidget.SelectRows)
         self._servers_table.setSelectionMode(QTableWidget.SingleSelection)
         self._servers_table.itemClicked.connect(self._server_clicked)
-        self._servers_table.itemDoubleClicked.connect(
-            self._server_double_clicked
-        )
+        self._servers_table.itemDoubleClicked.connect(self._server_double_clicked)
         self._servers_table.setMaximumHeight(100)
 
         buttons_widget = QWidget(top_widget)
@@ -953,9 +967,7 @@ class SettingsDialog(QDialog):
         keep_intvl_label = QLabel("Keep-Alive Interval: ")
         self._keep_intvl_spin_box = QSpinBox(bottom_widget)
         self._keep_intvl_spin_box.setRange(0, 86400)
-        self._keep_intvl_spin_box.setValue(
-            self._plugin.config["keep"]["intvl"]
-        )
+        self._keep_intvl_spin_box.setValue(self._plugin.config["keep"]["intvl"])
         self._keep_intvl_spin_box.setSuffix(" seconds")
         bottom_layout.addRow(keep_intvl_label, self._keep_intvl_spin_box)
 
@@ -1028,10 +1040,7 @@ class SettingsDialog(QDialog):
         item = self._servers_table.selectedItems()[0]
         server = item.data(Qt.UserRole)
         # If not the current server, connect to it
-        if (
-            not self._plugin.network.connected
-            or self._plugin.network.server != server
-        ):
+        if not self._plugin.network.connected or self._plugin.network.server != server:
             self._plugin.network.stop_server()
             self._plugin.network.connect(server)
         self.accept()
@@ -1067,9 +1076,7 @@ class SettingsDialog(QDialog):
         row_count = self._servers_table.rowCount()
         self._servers_table.insertRow(row_count)
 
-        new_server = QTableWidgetItem(
-            "%s:%d" % (server["host"], server["port"])
-        )
+        new_server = QTableWidgetItem("%s:%d" % (server["host"], server["port"]))
         new_server.setData(Qt.UserRole, server)
         new_server.setFlags(new_server.flags() & ~Qt.ItemIsEditable)
         self._servers_table.setItem(row_count, 0, new_server)
@@ -1181,7 +1188,7 @@ class SettingsDialog(QDialog):
         button.clicked.connect(member)
         return button
 
-    def _createComboBox(self,text):
+    def _createComboBox(self, text):
         comboBox = QComboBox()
         comboBox.setEditable(True)
         comboBox.addItem(text)
@@ -1189,14 +1196,18 @@ class SettingsDialog(QDialog):
         return comboBox
 
     def _browse_button_clicked(self):
-        directory = QFileDialog.getExistingDirectory(self, "Find Files",
-                self.directoryComboBox.currentText())
+        directory = QFileDialog.getExistingDirectory(
+            self, "Find Files", self.directoryComboBox.currentText()
+        )
 
         if directory:
             if self.directoryComboBox.findText(directory) == -1:
                 self.directoryComboBox.addItem(directory)
 
-            self.directoryComboBox.setCurrentIndex(self.directoryComboBox.findText(directory))
+            self.directoryComboBox.setCurrentIndex(
+                self.directoryComboBox.findText(directory)
+            )
+
 
 class RenameBinaryDialog(QDialog):
     """The dialog shown when an user wants to rename a binary."""
@@ -1235,6 +1246,7 @@ class RenameBinaryDialog(QDialog):
 
     def get_result(self):
         return self._new_binary_name.text()
+
 
 class ServerInfoDialog(QDialog):
     """The dialog shown when an user creates or edits a server."""

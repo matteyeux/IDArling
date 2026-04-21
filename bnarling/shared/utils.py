@@ -15,6 +15,37 @@ import logging
 _loggers = {}
 
 
+class _BinaryNinjaLogHandler(logging.Handler):
+    """Forward Python log records to BN's log API with matching severity.
+
+    The default StreamHandler writes to stderr, which BN's log pane paints
+    red regardless of level. Routing through log_info / log_warn / log_error
+    lets INFO/DEBUG lines render in the normal foreground color.
+    """
+
+    def emit(self, record):
+        try:
+            import binaryninja as bn
+        except Exception:
+            return
+        try:
+            msg = self.format(record)
+        except Exception:
+            return
+        lvl = record.levelno
+        try:
+            if lvl >= logging.ERROR:
+                bn.log_error(msg)
+            elif lvl >= logging.WARNING:
+                bn.log_warn(msg)
+            elif lvl >= logging.INFO:
+                bn.log_info(msg)
+            else:
+                bn.log_debug(msg)
+        except Exception:
+            pass
+
+
 def start_logging(log_path, log_name, level):
     """
     Setup the logger: add a new log level, create a logger which logs into
@@ -41,15 +72,16 @@ def start_logging(log_path, log_name, level):
             level = getattr(logging, level)
         logger.setLevel(level)
 
-    # Log to the console with a first format
     logger.propagate = False  # avoid having 2 log lines
-    stream_handler = logging.StreamHandler()
-    log_format = "[idarling][%(levelname)s] %(message)s"
-    formatter = logging.Formatter(fmt=log_format)
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
 
-    # Log to the disk with a second format
+    # Route to BN's log pane with per-level coloring instead of stderr.
+    bn_handler = _BinaryNinjaLogHandler()
+    bn_handler.setFormatter(
+        logging.Formatter(fmt="[%(levelname)s] %(message)s")
+    )
+    logger.addHandler(bn_handler)
+
+    # Log to disk as well, with timestamps.
     file_handler = logging.FileHandler(log_path)
     log_format = "[%(asctime)s][%(levelname)s] %(message)s"
     formatter = logging.Formatter(fmt=log_format, datefmt="%H:%M:%S")

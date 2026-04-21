@@ -92,9 +92,7 @@ class Action(object):
         action_name = self.__class__.__name__
 
         # Detach the action from the chosen menu
-        result = ida_kernwin.detach_action_from_menu(
-            self._menu, self._ACTION_ID
-        )
+        result = ida_kernwin.detach_action_from_menu(self._menu, self._ACTION_ID)
         if not result:
             return False
 
@@ -112,9 +110,7 @@ class Action(object):
 
     def update(self):
         """Check if the action should be enabled or not."""
-        ida_kernwin.update_action_state(
-            self._ACTION_ID, self._handler.update(None)
-        )
+        ida_kernwin.update_action_state(self._ACTION_ID, self._handler.update(None))
 
 
 class ActionHandler(ida_kernwin.action_handler_t):
@@ -208,7 +204,12 @@ class OpenActionHandler(ActionHandler):
         app_path = QCoreApplication.applicationFilePath()
         app_name = QFileInfo(app_path).fileName()
         file_ext = "i64"
-        file_name = "%s_%s_%s.%s" % (project.name, snapshot.binary, snapshot.name, file_ext)
+        file_name = "%s_%s_%s.%s" % (
+            project.name,
+            snapshot.binary,
+            snapshot.name,
+            file_ext,
+        )
         file_path = os.path.join(self._plugin.config["files_dir"], file_name)
 
         # Write the file to disk
@@ -322,9 +323,7 @@ class SaveActionHandler(ActionHandler):
         packet.upback = partial(SaveActionHandler._on_progress, progress)
         d = plugin.network.send_packet(packet)
         if d:
-            d.add_callback(
-                partial(SaveActionHandler.file_uploaded, plugin, progress)
-            )
+            d.add_callback(partial(SaveActionHandler.file_uploaded, plugin, progress))
             d.add_errback(plugin.logger.exception)
         progress.show()
 

@@ -24,9 +24,8 @@ except NameError:
     unicode = lambda s: str(s)
 
 
-def format(color, style=''):
-    """Return a QTextCharFormat with the given attributes.
-    """
+def format(color, style=""):
+    """Return a QTextCharFormat with the given attributes."""
 
     _color = QColor()
     # _color.setNamedColor(color)
@@ -37,25 +36,25 @@ def format(color, style=''):
     _format = QTextCharFormat()
     # _format.setForeground(_color)
     _format.setBackground(_color)
-    if 'bold' in style:
+    if "bold" in style:
         _format.setFontWeight(QFont.Bold)
-    if 'italic' in style:
+    if "italic" in style:
         _format.setFontItalic(True)
 
     return _format
 
-class MergedResult(object):
 
-    def __init__(self,diff = None):
+class MergedResult(object):
+    def __init__(self, diff=None):
         self.leftText = {}
         self.rigthText = {}
         self.mergedText = {}
-        self.diffs = {'-': {}, '+': {}}
+        self.diffs = {"-": {}, "+": {}}
         if diff is not None:
             self.parseDiff(diff)
             self.GetMergedText()
 
-    def parseDiff(self,diff):
+    def parseDiff(self, diff):
         lineNumL = 1
         lineNumR = 1
         prevType = ""
@@ -75,21 +74,21 @@ class MergedResult(object):
             if lineType == " ":
                 df = lineNumL - lineNumR
                 if df < 0:
-                    for s in range(0,abs(df)):
-                        self.leftText[lineNumL]=(lineNumL, "\n", "!")
-                        lineNumL +=1
+                    for s in range(0, abs(df)):
+                        self.leftText[lineNumL] = (lineNumL, "\n", "!")
+                        lineNumL += 1
                 elif df > 0:
-                    for s in range(0,df):
-                        self.rigthText[lineNumR]=(lineNumR, "\n", "!")
-                        lineNumR +=1
+                    for s in range(0, df):
+                        self.rigthText[lineNumR] = (lineNumR, "\n", "!")
+                        lineNumR += 1
 
-                self.leftText[lineNumL] = (lineNumL,line,lineType)
-                self.rigthText[lineNumR] = (lineNumR,line,lineType)
+                self.leftText[lineNumL] = (lineNumL, line, lineType)
+                self.rigthText[lineNumR] = (lineNumR, line, lineType)
                 lineNumL += 1
                 lineNumR += 1
                 prevType = ""
             if lineType == "-":
-                self.leftText[lineNumL] = (lineNumL,line,lineType)
+                self.leftText[lineNumL] = (lineNumL, line, lineType)
                 prevType = lineType
                 lineNumL += 1
             if lineType == "+":
@@ -97,18 +96,19 @@ class MergedResult(object):
                 prevType = lineType
                 lineNumR += 1
             if lineType == "?":
-                #self.diffs.append((lineNumL if prevType == "-" else lineNumR,prevType) + (self.parseDiffLine(line),))
-                self.diffs[prevType][(lineNumL if prevType == "-" else lineNumR) - 1] = self.parseDiffLine(line)
+                # self.diffs.append((lineNumL if prevType == "-" else lineNumR,prevType) + (self.parseDiffLine(line),))
+                self.diffs[prevType][
+                    (lineNumL if prevType == "-" else lineNumR) - 1
+                ] = self.parseDiffLine(line)
                 prevType = ""
 
-
-    def parseDiffLine(self,line):
+    def parseDiffLine(self, line):
         raw = []
         i = 0
         line = line.rstrip("\n")
         for i, ch in enumerate(line):
             if ch != " ":
-                raw.append((i,ch))
+                raw.append((i, ch))
         ret = []
         i = 0
         if len(raw) > 1:
@@ -117,11 +117,10 @@ class MergedResult(object):
             prevCH = raw[i][1]
             i += 1
             while i < len(raw):
-
                 if prevPos + 1 == raw[i][0] and prevCH == raw[i][1]:
                     prevPos += 1
                 else:
-                    ret.append((startPos,prevPos,prevCH))
+                    ret.append((startPos, prevPos, prevCH))
                     startPos = raw[i][0]
                     prevPos = startPos
                     prevCH = raw[i][1]
@@ -138,17 +137,21 @@ class MergedResult(object):
             if lnType == " ":
                 self.mergedText[lineNum] = (lineNum, line, lnType)
             elif lnType == "!":
-                self.mergedText[lineNum] = (lineNum, self.rigthText[lineNum][1],self.rigthText[lineNum][2])
+                self.mergedText[lineNum] = (
+                    lineNum,
+                    self.rigthText[lineNum][1],
+                    self.rigthText[lineNum][2],
+                )
             elif lnType == "-":
                 if self.rigthText[lineNum][2] == "!":
-                    self.mergedText[lineNum] = (lineNum, "\n","!")
+                    self.mergedText[lineNum] = (lineNum, "\n", "!")
                 else:
                     self.mergedText[lineNum] = (lineNum, line, lnType)
         return self.mergedText
 
+
 class LNTextEdit(QtWidgets.QFrame):
     class NumberBar(QtWidgets.QWidget):
-
         def __init__(self, edit):
             QtWidgets.QWidget.__init__(self, edit)
 
@@ -175,8 +178,6 @@ class LNTextEdit(QtWidgets.QFrame):
                 # selected.
                 self.update()
 
-
-
     class PlainTextEdit(QtWidgets.QPlainTextEdit):
         def __init__(self, *args):
             QtWidgets.QPlainTextEdit.__init__(self, *args)
@@ -189,20 +190,22 @@ class LNTextEdit(QtWidgets.QFrame):
         def dragEnterEvent(self, event):
             data = event.mimeData()
             urls = data.urls()
-            if (urls and urls[0].scheme() == 'file'):
+            if urls and urls[0].scheme() == "file":
                 event.acceptProposedAction()
 
         def dragMoveEvent(self, event):
             data = event.mimeData()
             urls = data.urls()
-            if (urls and urls[0].scheme() == 'file'):
+            if urls and urls[0].scheme() == "file":
                 event.acceptProposedAction()
 
         def dropEvent(self, event):
             data = event.mimeData()
             urls = data.urls()
-            if (urls and urls[0].scheme() == 'file'):
-                txt = "\n".join([unicode(url.path())[1:] for url in urls])  # remove 1st / char
+            if urls and urls[0].scheme() == "file":
+                txt = "\n".join(
+                    [unicode(url.path())[1:] for url in urls]
+                )  # remove 1st / char
                 self.insertPlainText(txt)
 
         def zoom_in(self):
@@ -235,7 +238,9 @@ class LNTextEdit(QtWidgets.QFrame):
             hi_selection = QtWidgets.QTextEdit.ExtraSelection()
 
             hi_selection.format.setBackground(self.palette().alternateBase())
-            hi_selection.format.setProperty(QtGui.QTextFormat.FullWidthSelection, 1)  # QtCore.QVariant(True)
+            hi_selection.format.setProperty(
+                QtGui.QTextFormat.FullWidthSelection, 1
+            )  # QtCore.QVariant(True)
             hi_selection.cursor = self.textCursor()
             hi_selection.cursor.clearSelection()
 
@@ -243,7 +248,10 @@ class LNTextEdit(QtWidgets.QFrame):
 
         def numberbarPaint(self, number_bar, event):
             font_metrics = self.fontMetrics()
-            current_line = self.document().findBlock(self.textCursor().position()).blockNumber() + 1
+            current_line = (
+                self.document().findBlock(self.textCursor().position()).blockNumber()
+                + 1
+            )
 
             block = self.firstVisibleBlock()
             line_count = block.blockNumber()
@@ -253,7 +261,11 @@ class LNTextEdit(QtWidgets.QFrame):
             # Iterate over all visible text blocks in the document.
             while block.isValid():
                 line_count += 1
-                block_top = self.blockBoundingGeometry(block).translated(self.contentOffset()).top()
+                block_top = (
+                    self.blockBoundingGeometry(block)
+                    .translated(self.contentOffset())
+                    .top()
+                )
 
                 # Check if the position of the block is out side of the visible
                 # area.
@@ -271,7 +283,9 @@ class LNTextEdit(QtWidgets.QFrame):
                     painter.setFont(font)
 
                 # Draw the line number right justified at the position of the line.
-                paint_rect = QtCore.QRect(0, block_top, number_bar.width(), font_metrics.height())
+                paint_rect = QtCore.QRect(
+                    0, block_top, number_bar.width(), font_metrics.height()
+                )
                 painter.drawText(paint_rect, QtCore.Qt.AlignRight, unicode(line_count))
 
                 block = block.next()
@@ -332,10 +346,12 @@ class LNTextEdit(QtWidgets.QFrame):
         if state == 1:
             mainWindowBgColor = QtWidgets.QPalette().color(QtWidgets.QPalette.Window)
             self.setStyleSheet(
-                'QPlainTextEdit[readOnly="true"] { background-color: %s;} QFrame {border: 0px}' % mainWindowBgColor.name())
+                'QPlainTextEdit[readOnly="true"] { background-color: %s;} QFrame {border: 0px}'
+                % mainWindowBgColor.name()
+            )
             self.setHighlight(0)
         else:
-            self.setStyleSheet('')
+            self.setStyleSheet("")
             self.setHighlight(1)
 
     def setFontSize(self, value):
@@ -378,11 +394,15 @@ class LNTextEdit(QtWidgets.QFrame):
             self.edit.appendPlainText(line)
             if left is not None:
                 if lineNum in diffs["-" if left else "+"]:
-                    for start_diff_pos, end_diff_pos, diff_type in diffs["-" if left else "+"][lineNum]:
+                    for start_diff_pos, end_diff_pos, diff_type in diffs[
+                        "-" if left else "+"
+                    ][lineNum]:
                         hi_selection = QTextEdit.ExtraSelection()
                         hi_selection.cursor = QTextCursor(self.edit.document())
                         hi_selection.cursor.setPosition(line_start + start_diff_pos)
-                        hi_selection.cursor.setPosition(line_start + end_diff_pos + 1, QTextCursor.KeepAnchor)
+                        hi_selection.cursor.setPosition(
+                            line_start + end_diff_pos + 1, QTextCursor.KeepAnchor
+                        )
                         hi_selection.cursor.setCharFormat(format("green"))
                         hi_selection.cursor.clearSelection()
                 else:
@@ -390,14 +410,21 @@ class LNTextEdit(QtWidgets.QFrame):
                         hi_selection = QTextEdit.ExtraSelection()
                         hi_selection.cursor = QTextCursor(self.edit.document())
                         hi_selection.cursor.setPosition(line_start)
-                        hi_selection.cursor.setPosition(line_start + len(line), QTextCursor.KeepAnchor)
+                        hi_selection.cursor.setPosition(
+                            line_start + len(line), QTextCursor.KeepAnchor
+                        )
                         hi_selection.cursor.setCharFormat(format("green"))
                         hi_selection.cursor.clearSelection()
-            line_start += (len(line) + 1)
+            line_start += len(line) + 1
+
 
 class DublicateResolverUI(QDialog):
-    def __init__(self,leftText = "", rightText = "",fToStorage = True):
-        flags = Qt.WindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint | Qt.WindowMaximizeButtonHint)
+    def __init__(self, leftText="", rightText="", fToStorage=True):
+        flags = Qt.WindowFlags(
+            Qt.WindowMinimizeButtonHint
+            | Qt.WindowCloseButtonHint
+            | Qt.WindowMaximizeButtonHint
+        )
         super(DublicateResolverUI, self).__init__(flags=flags)
         self.textEdits = []
         self.sel = 1
@@ -405,15 +432,20 @@ class DublicateResolverUI(QDialog):
         self.fToStorage = fToStorage
         self.leftText = leftText.splitlines(True)
         self.rightText = rightText.splitlines(True)
-        self.MR = MergedResult(self.GetDiff(self.leftText,self.rightText))
+        self.MR = MergedResult(self.GetDiff(self.leftText, self.rightText))
 
         self.initUI()
 
-
     def initUI(self):
-        qlLeft = QLabel('Existing type in the repository' if self.fToStorage else "Existing local type")
-        qlRight = QLabel('New type from the repository' if not self.fToStorage else "New local type")
-        qlMerged = QLabel('Merged type')
+        qlLeft = QLabel(
+            "Existing type in the repository"
+            if self.fToStorage
+            else "Existing local type"
+        )
+        qlRight = QLabel(
+            "New type from the repository" if not self.fToStorage else "New local type"
+        )
+        qlMerged = QLabel("Merged type")
 
         self.textEdit1 = LNTextEdit()
         self.textEdit1.edit.cursorPositionChanged.connect(self.highlight)
@@ -421,19 +453,19 @@ class DublicateResolverUI(QDialog):
         self.textEdit2.edit.cursorPositionChanged.connect(self.highlight)
         self.textEdit3 = LNTextEdit()
         self.textEdit3.edit.cursorPositionChanged.connect(self.highlight)
-        self.textEdits = [self.textEdit1.edit,self.textEdit2.edit,self.textEdit3.edit]
+        self.textEdits = [self.textEdit1.edit, self.textEdit2.edit, self.textEdit3.edit]
         # textEdit1 = QTextEdit()
         # textEdit2 = QTextEdit()
         # textEdit3 = QTextEdit()
 
-        #hi = PythonHighlighter(textEdit1)
-        #print hi.currentBlock().text()
+        # hi = PythonHighlighter(textEdit1)
+        # print hi.currentBlock().text()
 
-        #self.textEdit1.setText("AAAAAAAAAAAABBBBBBBBB\nCCCCCCCCCDDDDDDDDDD\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB")
+        # self.textEdit1.setText("AAAAAAAAAAAABBBBBBBBB\nCCCCCCCCCDDDDDDDDDD\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB\nAAAAAAAAAAAABBBBBBBBB")
         # self.textEdit1.edit.appendPlainText("DDDDDDDDD")
         # self.textEdit1.edit.appendPlainText("DDDDDDDDD")
-        #self.textEdit1.setReadOnly(True)
-        #print hi.currentBlock().text()
+        # self.textEdit1.setReadOnly(True)
+        # print hi.currentBlock().text()
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -448,9 +480,9 @@ class DublicateResolverUI(QDialog):
         grid.addWidget(self.textEdit3, 1, 5)
 
         btLeftAll = QPushButton("Use left")
-        grid.addWidget(btLeftAll,2,1)
+        grid.addWidget(btLeftAll, 2, 1)
         btLeft = QPushButton(">")
-        grid.addWidget(btLeft,1,2)
+        grid.addWidget(btLeft, 1, 2)
 
         btLeft.clicked.connect(self.Left)
         btLeftAll.clicked.connect(self.LeftAll)
@@ -464,7 +496,7 @@ class DublicateResolverUI(QDialog):
         btRightAll.clicked.connect(self.RightAll)
 
         btUseMerged = QPushButton("Use merged")
-        grid.addWidget(btUseMerged,2,3)
+        grid.addWidget(btUseMerged, 2, 3)
 
         btUseMerged.clicked.connect(self.UseMerged)
 
@@ -478,22 +510,21 @@ class DublicateResolverUI(QDialog):
             if type(w) == QMainWindow:
                 mainGeo = w.geometry()
                 break
-        #mainGeo.setHeight(mainGeo.height() - 300)
-        #mainGeo.setWidth(mainGeo.width() - 300)
-        #print mainGeo
+        # mainGeo.setHeight(mainGeo.height() - 300)
+        # mainGeo.setWidth(mainGeo.width() - 300)
+        # print mainGeo
 
-        #print QCoreApplication.instance().desktop().screenGeometry()
-        self.setMinimumSize(mainGeo.width()/4*3,mainGeo.height()/4*3)
-        #print self.size()
-        #self.resize(QSize(rec.width() - 400, rec.height() - 400))
+        # print QCoreApplication.instance().desktop().screenGeometry()
+        self.setMinimumSize(mainGeo.width() / 4 * 3, mainGeo.height() / 4 * 3)
+        # print self.size()
+        # self.resize(QSize(rec.width() - 400, rec.height() - 400))
         # self.setGeometry(600, 600, 600, 600)
-        self.setWindowTitle('Review')
+        self.setWindowTitle("Review")
         self.textEdit1.setMergeText(self.MR.leftText, self.MR.diffs)
         self.textEdit3.setMergeText(self.MR.rigthText, self.MR.diffs, False)
         self.textEdit2.setMergeText(self.MR.GetMergedText(), self.MR.diffs, False)
         self.textEdit1.setReadOnly(True)
         self.textEdit3.setReadOnly(True)
-
 
     def highlight(self):
         # print (self.sender())
@@ -517,7 +548,9 @@ class DublicateResolverUI(QDialog):
                 hi_selection = QTextEdit.ExtraSelection()
 
                 hi_selection.format.setBackground(edit.palette().alternateBase())
-                hi_selection.format.setProperty(QTextFormat.FullWidthSelection, QVariant(True))
+                hi_selection.format.setProperty(
+                    QTextFormat.FullWidthSelection, QVariant(True)
+                )
                 bl = edit.document().findBlockByNumber(line_num)
                 cr = edit.textCursor()
                 cr.setPosition(bl.position())
@@ -535,7 +568,7 @@ class DublicateResolverUI(QDialog):
         line = self.textEdit1.lines[line_num][1]
         self.textEdit2.lines[line_num] = (ct[0], line, ct[2])
         self.textEdit2.edit.document().clear()
-        self.textEdit2.setMergeText(self.textEdit2.lines,self.textEdit2.diffs,False)
+        self.textEdit2.setMergeText(self.textEdit2.lines, self.textEdit2.diffs, False)
         block = self.textEdit2.edit.document().findBlockByNumber(line_num)
         cr = self.textEdit2.edit.textCursor()
         cr.setPosition(block.position())
@@ -547,7 +580,7 @@ class DublicateResolverUI(QDialog):
         line = self.textEdit3.lines[line_num][1]
         self.textEdit2.lines[line_num] = (ct[0], line, ct[2])
         self.textEdit2.edit.document().clear()
-        self.textEdit2.setMergeText(self.textEdit2.lines,self.textEdit2.diffs,False)
+        self.textEdit2.setMergeText(self.textEdit2.lines, self.textEdit2.diffs, False)
         block = self.textEdit2.edit.document().findBlockByNumber(line_num)
         cr = self.textEdit2.edit.textCursor()
         cr.setPosition(block.position())
@@ -575,11 +608,12 @@ class DublicateResolverUI(QDialog):
             self.selText = self.textEdit3.edit.toPlainText()
 
     @staticmethod
-    def GetDiff(s1,s2):
+    def GetDiff(s1, s2):
         d = Differ()
 
         result = list(d.compare(s1, s2))
         return result
+
     def Go(self):
         self.setWindowModality(Qt.ApplicationModal)
         # self.setWindowModality(Qt.WindowModal)

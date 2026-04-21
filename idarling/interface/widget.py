@@ -15,7 +15,15 @@ from functools import partial, lru_cache
 import time
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, QTimer
-from PySide6.QtGui import QAction, QActionGroup, QIcon, QImage, QPainter, QPixmap, QRegion
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QIcon,
+    QImage,
+    QPainter,
+    QPixmap,
+    QRegion,
+)
 from PySide6.QtWidgets import QLabel, QMenu, QWidget
 
 from .dialogs import SettingsDialog
@@ -110,7 +118,7 @@ class StatusWidget(QWidget):
 
     def refresh(self):
         """Called to update the widget when the network state has changed."""
-        #self._plugin.logger.trace("Refreshing the status bar widget")
+        # self._plugin.logger.trace("Refreshing the status bar widget")
 
         # Get the corresponding color, text and icon
         if self._plugin.network.connected:
@@ -295,10 +303,7 @@ class StatusWidget(QWidget):
         disc_servers = self._plugin.network.discovery.servers
         disc_servers = [s for s, t in disc_servers if time.time() - t < 10.0]
         disc_servers = [s for s in disc_servers if s not in user_servers]
-        if (
-            self._plugin.network.started
-            and self._plugin.network.server in disc_servers
-        ):
+        if self._plugin.network.started and self._plugin.network.server in disc_servers:
             disc_servers.remove(self._plugin.network.server)
         if disc_servers:
             menu.addSeparator()
@@ -399,38 +404,26 @@ class StatusWidget(QWidget):
         painter = QPainter(buffer)
 
         # Paint the server text widget
-        region = QRegion(
-            QRect(QPoint(0, 0), self._servers_text_widget.sizeHint())
-        )
+        region = QRegion(QRect(QPoint(0, 0), self._servers_text_widget.sizeHint()))
         self._servers_text_widget.render(painter, QPoint(0, 0), region)
         # Paint the server icon widget
-        region = QRegion(
-            QRect(QPoint(0, 0), self._servers_icon_widget.sizeHint())
-        )
+        region = QRegion(QRect(QPoint(0, 0), self._servers_icon_widget.sizeHint()))
         x = self._servers_text_widget.sizeHint().width() + 3
         self._servers_icon_widget.render(painter, QPoint(x, 0), region)
         # Paint the invites text widget
-        region = QRegion(
-            QRect(QPoint(0, 0), self._invites_text_widget.sizeHint())
-        )
+        region = QRegion(QRect(QPoint(0, 0), self._invites_text_widget.sizeHint()))
         x += self._servers_icon_widget.sizeHint().width() + 3
         self._invites_text_widget.render(painter, QPoint(x, 0), region)
         # Paint the invites icon widget
-        region = QRegion(
-            QRect(QPoint(0, 0), self._invites_icon_widget.sizeHint())
-        )
+        region = QRegion(QRect(QPoint(0, 0), self._invites_icon_widget.sizeHint()))
         x += self._invites_text_widget.sizeHint().width() + 3
         self._invites_icon_widget.render(painter, QPoint(x, 0), region)
         # Paint the users text widget
-        region = QRegion(
-            QRect(QPoint(0, 0), self._users_text_widget.sizeHint())
-        )
+        region = QRegion(QRect(QPoint(0, 0), self._users_text_widget.sizeHint()))
         x += self._invites_icon_widget.sizeHint().width() + 3
         self._users_text_widget.render(painter, QPoint(x, 0), region)
         # Paint the users icon widget
-        region = QRegion(
-            QRect(QPoint(0, 0), self._users_icon_widget.sizeHint())
-        )
+        region = QRegion(QRect(QPoint(0, 0), self._users_icon_widget.sizeHint()))
         x += self._users_text_widget.sizeHint().width() + 3
         self._users_icon_widget.render(painter, QPoint(x, 0), region)
         painter.end()

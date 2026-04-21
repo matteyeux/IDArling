@@ -113,7 +113,12 @@ class MakeDataEvent(Event):
         self.sname = sname
 
     def __call__(self):
-        ida_bytes.create_data(self.ea, ida_bytes.calc_dflags(self.flags, True), self.size, idc.get_struc_id(self.sname) if self.sname else ida_netnode.BADNODE)
+        ida_bytes.create_data(
+            self.ea,
+            ida_bytes.calc_dflags(self.flags, True),
+            self.size,
+            idc.get_struc_id(self.sname) if self.sname else ida_netnode.BADNODE,
+        )
 
 
 class RenamedEvent(Event):
@@ -127,9 +132,7 @@ class RenamedEvent(Event):
 
     def __call__(self):
         flags = ida_name.SN_LOCAL if self.local_name else 0
-        ida_name.set_name(
-            self.ea, self.new_name, flags | ida_name.SN_NOWARN
-        )
+        ida_name.set_name(self.ea, self.new_name, flags | ida_name.SN_NOWARN)
         ida_kernwin.request_refresh(ida_kernwin.IWID_DISASMS)
         ida_kernwin.request_refresh(ida_kernwin.IWID_STKVIEW)
 
@@ -321,8 +324,10 @@ class LocalTypesChangedEvent(Event):
         for t_old, t_new in self.local_types:
             if t_new:
                 name, parsed_list, type_fields = t_new
-                t_new = LocalType(name=name,parsedList=parsed_list,TypeFields=type_fields.encode())
-                InsertType(t_new,fReplace=True)
+                t_new = LocalType(
+                    name=name, parsedList=parsed_list, TypeFields=type_fields.encode()
+                )
+                InsertType(t_new, fReplace=True)
         ida_kernwin.request_refresh(ida_kernwin.IWID_LOCTYPS)
         # XXX - old code below to delete?
         # from .core import Core
@@ -508,9 +513,7 @@ class EnumMemberCreatedEvent(Event):
 
     def __call__(self):
         enum = idc.get_enum(self.ename)
-        idc.add_enum_member(
-            enum, self.name, self.value, self.bmask
-        )
+        idc.add_enum_member(enum, self.name, self.value, self.bmask)
 
 
 class EnumMemberDeletedEvent(Event):
@@ -538,9 +541,7 @@ class StrucCreatedEvent(Event):
         self.is_union = is_union
 
     def __call__(self):
-        idc.add_struc(
-            ida_idaapi.BADADDR, self.name, self.is_union
-        )
+        idc.add_struc(ida_idaapi.BADADDR, self.name, self.is_union)
 
 
 class StrucDeletedEvent(Event):
@@ -583,9 +584,7 @@ class StrucCmtChangedEvent(Event):
         sptr = idc.get_struc(struc)
         cmt = self.cmt if self.cmt else ""
         if self.smname:
-            mptr = idc.get_member_by_name(
-                sptr, self.smname
-            )
+            mptr = idc.get_member_by_name(sptr, self.smname)
             idc.set_member_cmt(mptr, cmt, self.repeatable_cmt)
         else:
             idc.set_struc_cmt(sptr.id, cmt, self.repeatable_cmt)
@@ -595,6 +594,7 @@ class StrucMemberEvent(Event):
     """
     Base class inherited by all "struc_member_*" events
     """
+
     @staticmethod
     def _get_sptr(struct_name):
         struc_id = idc.get_struc_id(struct_name)
@@ -604,21 +604,21 @@ class StrucMemberEvent(Event):
     def _get_member_type(type_flag, extra):
         mt = ida_nalt.opinfo_t()
         if ida_bytes.is_struct(type_flag):
-            mt.tid = idc.get_struc_id(extra['struc_name'])
+            mt.tid = idc.get_struc_id(extra["struc_name"])
         if type_flag & ida_bytes.off_flag():
             mt.ri = ida_nalt.refinfo_t()
             mt.ri.init(
-                extra['flags'],
-                extra['base'],
-                extra['target'],
-                extra['tdelta'],
+                extra["flags"],
+                extra["base"],
+                extra["target"],
+                extra["tdelta"],
             )
         if type_flag & ida_bytes.enum_flag():
-            mt.ec.serial = extra['serial']
+            mt.ec.serial = extra["serial"]
             # Backwards compatibility: Past versions didn't store the tid
-            mt.ec.tid = extra.get('tid', 0)
+            mt.ec.tid = extra.get("tid", 0)
         if ida_bytes.is_strlit(type_flag):
-            mt.strtype = extra['strtype']
+            mt.strtype = extra["strtype"]
 
         return mt
 
@@ -662,9 +662,7 @@ class StrucMemberChangedEvent(StrucMemberEvent):
     def __call__(self):
         sptr = self._get_sptr(self.sname)
         mt = self._get_member_type(self.flag, self.extra)
-        idc.set_member_type(
-            sptr, self.soff, self.flag, mt, self.eoff - self.soff
-        )
+        idc.set_member_type(sptr, self.soff, self.flag, mt, self.eoff - self.soff)
 
 
 class StrucMemberDeletedEvent(StrucMemberEvent):
@@ -691,9 +689,7 @@ class StrucMemberRenamedEvent(StrucMemberEvent):
 
     def __call__(self):
         sptr = self._get_sptr(self.sname)
-        idc.set_member_name(
-            sptr, self.offset, self.newname
-        )
+        idc.set_member_name(sptr, self.offset, self.newname)
 
 
 class ExpandingStrucEvent(Event):
@@ -766,12 +762,10 @@ class SegmDeletedEvent(Event):
         self.flags = flags
 
     def __call__(self):
-        if not hasattr(self, 'flags'):
+        if not hasattr(self, "flags"):
             # segm_deleted events created prior to IDA 7.7 lack flags
             self.flags = 0
-        ida_segment.del_segm(
-            self.ea, self.flags | ida_segment.SEGMOD_SILENT
-        )
+        ida_segment.del_segm(self.ea, self.flags | ida_segment.SEGMOD_SILENT)
 
 
 class SegmStartChangedEvent(Event):
@@ -920,9 +914,7 @@ class SgrChanged(Event):
         new_ranges = {r[0]: r for r in self.sreg_ranges}
         old_ranges = {r[0]: r for r in SgrChanged.get_sreg_ranges(self.rg)}
 
-        start_eas = sorted(
-            set(list(new_ranges.keys()) + list(old_ranges.keys()))
-        )
+        start_eas = sorted(set(list(new_ranges.keys()) + list(old_ranges.keys())))
         for start_ea in start_eas:
             new_range = new_ranges.get(start_ea, None)
             old_range = old_ranges.get(start_ea, None)
@@ -943,6 +935,7 @@ class SgrChanged(Event):
                     )
 
         ida_kernwin.request_refresh(ida_kernwin.IWID_SEGREGS)
+
 
 class MakeUnknown(Event):
     __event__ = "make_unknown"
@@ -1074,9 +1067,7 @@ class UserLvarSettingsEvent(HexRaysEvent):
         lvinf.lvvec = ida_hexrays.lvar_saved_infos_t()
         if "lvvec" in self.lvar_settings:
             for lv in self.lvar_settings["lvvec"]:
-                lvinf.lvvec.push_back(
-                    UserLvarSettingsEvent._get_lvar_saved_info(lv)
-                )
+                lvinf.lvvec.push_back(UserLvarSettingsEvent._get_lvar_saved_info(lv))
         lvinf.sizes = ida_pro.intvec_t()
         if "sizes" in self.lvar_settings:
             for i in self.lvar_settings["sizes"]:
@@ -1110,7 +1101,11 @@ class UserLvarSettingsEvent(HexRaysEvent):
         # type = Event.encode_bytes(type)
         fields = Event.encode_bytes(fields)
         fldcmts = Event.encode_bytes(fldcmts)
-        type = None if parsed_list is None else GetTypeString(pickle.loads(Event.encode_bytes(parsed_list)))
+        type = (
+            None
+            if parsed_list is None
+            else GetTypeString(pickle.loads(Event.encode_bytes(parsed_list)))
+        )
         type_ = ida_typeinf.tinfo_t()
         if type is not None:
             type_.deserialize(None, type, fields, fldcmts)

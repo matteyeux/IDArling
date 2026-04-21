@@ -169,7 +169,7 @@ class Core(Module):
 
         class IDPHooksCore(ida_idp.IDP_Hooks):
             def ev_get_bg_color(self, color, ea):
-                #core._plugin.logger.trace("Get bg color hook")
+                # core._plugin.logger.trace("Get bg color hook")
                 value = core._plugin.interface.painter.get_bg_color(ea)
                 if value is not None:
                     ctypes.c_uint.from_address(long(color)).value = value
@@ -177,7 +177,7 @@ class Core(Module):
                 return 0
 
             def ev_auto_queue_empty(self, arg):
-                #core._plugin.logger.debug("Auto queue empty hook")
+                # core._plugin.logger.debug("Auto queue empty hook")
                 if ida_auto.get_auto_state() == ida_auto.AU_NONE:
                     client = core._plugin.network.client
                     if client:
@@ -213,7 +213,7 @@ class Core(Module):
                 # UpdateLocation if we are not in a valid session
                 if not core._session_joined:
                     return
-                #core._plugin.logger.trace("View loc changed hook")
+                # core._plugin.logger.trace("View loc changed hook")
                 if now.plce.toea() != was.plce.toea():
                     name = core._plugin.config["user"]["name"]
                     color = core._plugin.config["user"]["color"]
@@ -259,7 +259,9 @@ class Core(Module):
         self._hooked = False
 
     def load_netnode_old(self):
-        self._plugin.logger.warning("Old idb detected, please save your idb as a new snapshot")
+        self._plugin.logger.warning(
+            "Old idb detected, please save your idb as a new snapshot"
+        )
         node = ida_netnode.netnode(Core.NETNODE_NAME, 0, True)
 
         self._project = node.hashstr("group") or None
@@ -304,7 +306,7 @@ class Core(Module):
             node.hashset_buf("binary", str(self._binary))
         if self._snapshot:
             node.hashset_buf("snapshot", str(self._snapshot))
-        # We need the test to be non-zero as we need to reset and save tick=0 
+        # We need the test to be non-zero as we need to reset and save tick=0
         # when saving an IDB to a new snapshot
         if self._tick != -1:
             node.hashset_buf("tick", str(self._tick))

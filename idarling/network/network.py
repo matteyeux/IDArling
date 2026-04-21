@@ -71,7 +71,13 @@ class Network(Module):
 
     def connect(self, server):
         if fDebug:
-            pydevd_pycharm.settrace('localhost', port=2233, stdoutToServer=True, stderrToServer=True, suspend=True)
+            pydevd_pycharm.settrace(
+                "localhost",
+                port=2233,
+                stdoutToServer=True,
+                stderrToServer=True,
+                suspend=True,
+            )
         """Connect to the specified server."""
         # Make sure we're not already connected
         if self._client:
@@ -114,7 +120,7 @@ class Network(Module):
         try:
             err = sock.connect_ex((host, port))
             if err not in (0, errno.EINPROGRESS, errno.EWOULDBLOCK):
-                raise OSError(err, os.strerror(err), '')
+                raise OSError(err, os.strerror(err), "")
         except OSError as e:
             self._plugin._logger.exception(e)
             self._client.terminate()

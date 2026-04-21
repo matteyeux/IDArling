@@ -85,9 +85,7 @@ def start(args):
 
 def main():
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument(
-        "--help", action="help", help="show this help message and exit"
-    )
+    parser.add_argument("--help", action="help", help="show this help message and exit")
 
     # Users can specify the host and port to start the server on
     parser.add_argument(

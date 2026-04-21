@@ -26,8 +26,6 @@ from .network.network import Network
 from .shared.utils import start_logging
 
 
-
-
 class IdarlingPlugin(ida_idaapi.plugin_t):
     """
     This is the main class of the plugin. It subclasses plugin_t as required
@@ -51,7 +49,9 @@ class IdarlingPlugin(ida_idaapi.plugin_t):
     @staticmethod
     def description():
         """Return the description displayed in the console."""
-        return "{} v{}".format(IdarlingPlugin.PLUGIN_NAME, IdarlingPlugin.PLUGIN_VERSION)
+        return "{} v{}".format(
+            IdarlingPlugin.PLUGIN_NAME, IdarlingPlugin.PLUGIN_VERSION
+        )
 
     @staticmethod
     def plugin_resource(filename):
@@ -162,8 +162,11 @@ class IdarlingPlugin(ida_idaapi.plugin_t):
     def _auto_connect(self):
         for server in self._config["servers"]:
             if "auto_connect" in server and server["auto_connect"]:
-                self.logger.info("Attempting to auto-connect to {}:{}".format(
-                                 server["host"], server["port"]))
+                self.logger.info(
+                    "Attempting to auto-connect to {}:{}".format(
+                        server["host"], server["port"]
+                    )
+                )
                 self._network.connect(server)
 
     def _print_banner(self):

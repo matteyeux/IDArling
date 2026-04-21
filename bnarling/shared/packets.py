@@ -226,7 +226,10 @@ class EventFactory(PacketFactory):
         if server:  # Server only knows about DefaultEvent
             return DefaultEvent
 
-        cls = EventFactory._EVENTS[dct["event_type"]]
+        # Unknown event types (e.g. IDA-specific IDB events that this BN
+        # client doesn't register) are parsed generically and dropped by
+        # the client's recv_packet.
+        cls = EventFactory._EVENTS.get(dct["event_type"], DefaultEvent)
         if type(cls) != mcs:
             cls = type(cls).get_class(dct, server)
         return cls

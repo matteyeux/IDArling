@@ -31,9 +31,11 @@ del_func(0x140005779)
 # XXX - FuncTailDeletedEvent
 # XXX - TailOwnerChangedEvent
 
-print("[+] Set 2 comments in assembly at 0x140005779 and 0x14000577a -> CmtChangedEvent")
+print(
+    "[+] Set 2 comments in assembly at 0x140005779 and 0x14000577a -> CmtChangedEvent"
+)
 set_cmt(0x140005779, "test comment non repeatable", 0)
-set_cmt(0x14000577a, "test comment repeatable", 1)
+set_cmt(0x14000577A, "test comment repeatable", 1)
 
 print("[+] Set a function comment at 0x140321998 -> RangeCmtChangedEvent")
 func = ida_funcs.get_func(0x140321998)
@@ -47,7 +49,9 @@ ida_lines.add_extra_cmt(0x140004998, 0, "next comment")
 # XXX - LocalTypesChangedEvent
 # XXX - OpTypeChangedEvent
 
-print("[+] Change the argument: 0C0190052 hexadecimal to decimal at 0x140321C6E in assembly  -> OpTypeChangedEvent")
+print(
+    "[+] Change the argument: 0C0190052 hexadecimal to decimal at 0x140321C6E in assembly  -> OpTypeChangedEvent"
+)
 op_dec(0x140321C6E, 1)
 
 print("[+] Create an enum -> EnumCreatedEvent")
@@ -57,7 +61,7 @@ ida_enum.add_enum(BADADDR, "test_enum_name_to_delete", 0)
 
 print("[+] Delete an enum -> EnumDeletedEvent")
 ida_enum.del_enum(ida_enum.get_enum("test_enum_name_to_delete"))
-        
+
 print("[+] Rename an enum -> EnumRenamedEvent")
 enum = ida_enum.get_enum("test_enum_name_to_rename")
 ida_enum.set_enum_name(enum, "test_enum_renamed")
@@ -90,7 +94,7 @@ ida_struct.set_struc_name(struc, "GUID_RENAMED")
 # XXX - StrucCmtChangedEvent
 
 # XXX - StrucMemberCreatedEvent
-        
+
 # XXX - StrucMemberChangedEvent
 # XXX - StrucMemberDeletedEvent
 # XXX - StrucMemberRenamedEvent
@@ -112,8 +116,13 @@ del_items(0x1402B7B78)
 
 # XXX - UserLabelsEvent
 
-print("[+] Defining 2 comments in HexRays window in function defined at 0x140321998 -> UserCmtsEvent")
-list_comments = [((0x1403219E6, 74), 'one comment in HexRays'), ((0x140321A76, 74), 'another comment in HexRays')]
+print(
+    "[+] Defining 2 comments in HexRays window in function defined at 0x140321998 -> UserCmtsEvent"
+)
+list_comments = [
+    ((0x1403219E6, 74), "one comment in HexRays"),
+    ((0x140321A76, 74), "another comment in HexRays"),
+]
 cmts = ida_hexrays.user_cmts_new()
 for (tl_ea, tl_itp), cmt in list_comments:
     tl = ida_hexrays.treeloc_t()

@@ -1,5 +1,6 @@
 import ida_idp, ida_typeinf, ida_bytes, ida_enum, ida_hexrays
 
+
 class MyIDBHooks(ida_idp.IDB_Hooks):
     def __init__(self):
         ida_idp.IDB_Hooks.__init__(self)
@@ -14,7 +15,10 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         return 0
 
     def renamed(self, ea, new_name, local_name):
-        print("Detected a renamed at 0x%x to %s (is_local=%s)" % (ea, new_name, local_name))
+        print(
+            "Detected a renamed at 0x%x to %s (is_local=%s)"
+            % (ea, new_name, local_name)
+        )
         return 0
 
     def func_added(self, func):
@@ -26,7 +30,9 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         return 0
 
     def set_func_start(self, func, new_start):
-        print("Detected a new function start from %x to 0x%x" % (func.start_ea, new_start))
+        print(
+            "Detected a new function start from %x to 0x%x" % (func.start_ea, new_start)
+        )
         return 0
 
     def set_func_end(self, func, new_end):
@@ -42,13 +48,17 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         return 0
 
     def tail_owner_changed(self, tail, owner_func, old_owner):
-        print("Detected a tail owner changed at 0x%x for %s" % (tail.start_ea, owner_func))
+        print(
+            "Detected a tail owner changed at 0x%x for %s" % (tail.start_ea, owner_func)
+        )
         return 0
 
     def cmt_changed(self, ea, repeatable_cmt):
         cmt = ida_bytes.get_cmt(ea, repeatable_cmt)
         cmt = "" if not cmt else cmt
-        print("Detected a comment changed at 0x%x for %s, %s" % (ea, cmt, repeatable_cmt))
+        print(
+            "Detected a comment changed at 0x%x for %s, %s" % (ea, cmt, repeatable_cmt)
+        )
         return 0
 
     def range_cmt_changed(self, kind, a, cmt, repeatable):
@@ -63,7 +73,7 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         type = ida_typeinf.idc_get_type_raw(ea)
         print("Detected a ti changed at 0x%x for type: %s" % (ea, type))
         return 0
-        
+
     def op_type_changed(self, ea, n):
         print("Detected an op type changed at 0x%x for %d" % (ea, n))
         return 0
@@ -83,7 +93,10 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
             oldname = ida_enum.get_enum_name(id)
         else:
             oldname = ida_enum.get_enum_member_name(id)
-        print("Detected an enum renamed from %s to %s (is_enum=%s)" % (oldname, newname, is_enum))
+        print(
+            "Detected an enum renamed from %s to %s (is_enum=%s)"
+            % (oldname, newname, is_enum)
+        )
         return 0
 
     def enum_bf_changed(self, id):
@@ -94,7 +107,10 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
     def enum_cmt_changed(self, tid, repeatable_cmt):
         cmt = ida_enum.get_enum_cmt(tid, repeatable_cmt)
         emname = ida_enum.get_enum_name(tid)
-        print("Detected an enum comment changed for 0x%x (%s): %s, %s" % (tid, emname, cmt, repeatable_cmt))
+        print(
+            "Detected an enum comment changed for 0x%x (%s): %s, %s"
+            % (tid, emname, cmt, repeatable_cmt)
+        )
         return 0
 
     def enum_member_created(self, id, cid):
@@ -102,7 +118,10 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         name = ida_enum.get_enum_member_name(cid)
         value = ida_enum.get_enum_member_value(cid)
         bmask = ida_enum.get_enum_member_bmask(cid)
-        print("Detected a new enum member created: 0x%x (%s), 0x%x (%s) = 0x%x, 0x%x" % (id, ename, cid, name, value, bmask))
+        print(
+            "Detected a new enum member created: 0x%x (%s), 0x%x (%s) = 0x%x, 0x%x"
+            % (id, ename, cid, name, value, bmask)
+        )
         return 0
 
     def deleting_enum_member(self, id, cid):
@@ -110,13 +129,19 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         value = ida_enum.get_enum_member_value(cid)
         serial = ida_enum.get_enum_member_serial(cid)
         bmask = ida_enum.get_enum_member_bmask(cid)
-        print("Detected a new enum member created: 0x%x (%s), 0x%x (%s) = 0x%x, 0x%x" % (id, ename, cid, serial, value, bmask))
+        print(
+            "Detected a new enum member created: 0x%x (%s), 0x%x (%s) = 0x%x, 0x%x"
+            % (id, ename, cid, serial, value, bmask)
+        )
         return 0
 
     def struc_created(self, tid):
         name = ida_struct.get_struc_name(tid)
         is_union = ida_struct.is_union(tid)
-        print("Detected a new struct created: 0x%x (%s) (is_union=%s)" % (tid, name, is_union))
+        print(
+            "Detected a new struct created: 0x%x (%s) (is_union=%s)"
+            % (tid, name, is_union)
+        )
         return 0
 
     def deleting_struc(self, sptr):
@@ -133,7 +158,7 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         fieldname = ida_struct.get_member_name(mptr.id)
         print("Detected a struct member created %s.%s" % (sname, fieldname))
         return 0
-        
+
     def struc_member_deleted(self, sptr, off1, off2):
         sname = ida_struct.get_struc_name(sptr.id)
         print("Detected a struct member deleted %s at offset 0x%x" % (sname, off2))
@@ -142,7 +167,10 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
     def renaming_struc_member(self, sptr, mptr, newname):
         sname = ida_struct.get_struc_name(sptr.id)
         offset = mptr.soff
-        print("Detected a struct member renamed %s at offset 0x%x with new name: %s" % (sname, offset, newname))
+        print(
+            "Detected a struct member renamed %s at offset 0x%x with new name: %s"
+            % (sname, offset, newname)
+        )
         return 0
 
     def struc_cmt_changed(self, id, repeatable_cmt):
@@ -153,9 +181,12 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
             sname = fullname
             smname = ""
         cmt = ida_struct.get_struc_cmt(id, repeatable_cmt)
-        print("Detected a struct comment changed for 0x%x (%s and %s): %s, %s" % (id, sname, smname, cmt, repeatable_cmt))
+        print(
+            "Detected a struct comment changed for 0x%x (%s and %s): %s, %s"
+            % (id, sname, smname, cmt, repeatable_cmt)
+        )
         return 0
-        
+
     def struc_member_changed(self, sptr, mptr):
         sname = ida_struct.get_struc_name(sptr.id)
         print("Detected a struct member changed %s at offset 0x%x" % (sname, mptr.eoff))
@@ -163,35 +194,56 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
 
     def expanding_struc(self, sptr, offset, delta):
         sname = ida_struct.get_struc_name(sptr.id)
-        print("Detected a struct expansion: %s at offset 0x%x (delta=0x%x)" % (sname, offset, delta))
+        print(
+            "Detected a struct expansion: %s at offset 0x%x (delta=0x%x)"
+            % (sname, offset, delta)
+        )
         return 0
 
     def segm_added(self, s):
-        print("Detected a segment added: %s [0x%x, 0x%x]" % (ida_segment.get_segm_name(s), s.start_ea, s.end_ea))
+        print(
+            "Detected a segment added: %s [0x%x, 0x%x]"
+            % (ida_segment.get_segm_name(s), s.start_ea, s.end_ea)
+        )
         return 0
-        
+
     def segm_deleted(self, start_ea, end_ea):
         print("Detected a segment deleted: [0x%x, 0x%x]" % (start_ea, end_ea))
         return 0
 
     def segm_start_changed(self, s, oldstart):
-        print("Detected a segment changed: %s start from 0x%x to 0x%x" % (ida_segment.get_segm_name(s), oldstart, s.start_ea))
+        print(
+            "Detected a segment changed: %s start from 0x%x to 0x%x"
+            % (ida_segment.get_segm_name(s), oldstart, s.start_ea)
+        )
         return 0
 
     def segm_end_changed(self, s, oldend):
-        print("Detected a segment changed: %s end from 0x%x to 0x%x" % (ida_segment.get_segm_name(s), oldend, s.end_ea))
+        print(
+            "Detected a segment changed: %s end from 0x%x to 0x%x"
+            % (ida_segment.get_segm_name(s), oldend, s.end_ea)
+        )
         return 0
 
     def segm_name_changed(self, s, name):
-        print("Detected a segment name changed: %s for [0x%x, 0x%x]" % (name, s.start_ea, s.end_ea))
+        print(
+            "Detected a segment name changed: %s for [0x%x, 0x%x]"
+            % (name, s.start_ea, s.end_ea)
+        )
         return 0
 
     def segm_class_changed(self, s, sclass):
-        print("Detected a segment class changed for start: 0x%x, class: 0x%x" % (s.start_ea, sclass))
+        print(
+            "Detected a segment class changed for start: 0x%x, class: 0x%x"
+            % (s.start_ea, sclass)
+        )
         return 0
 
     def segm_attrs_updated(self, s):
-        print("Detected a segment attributes changed for start: 0x%x, perms: 0x%x" % (s.start_ea, s.perm))
+        print(
+            "Detected a segment attributes changed for start: 0x%x, perms: 0x%x"
+            % (s.start_ea, s.perm)
+        )
         return 0
 
     def segm_moved(self, from_ea, to_ea, size, changed_netmap):
@@ -207,6 +259,7 @@ class MyIDBHooks(ida_idp.IDB_Hooks):
         # XXX
         print("Detected sgr_changed()")
         return 0
+
 
 class MyHexRaysHooks(ida_idp.IDB_Hooks):
     def __init__(self):
@@ -236,7 +289,7 @@ class MyHexRaysHooks(ida_idp.IDB_Hooks):
     def unhook(self):
         if self._available:
             self._installed = False
-            
+
     def _hxe_callback(self, event, *_):
         if not self._installed:
             print("HexRays hooks not installed, exiting early")
@@ -266,7 +319,7 @@ class MyHexRaysHooks(ida_idp.IDB_Hooks):
         else:
             print("HexRays: main SKIPPED")
         return 0
-        
+
     @staticmethod
     def _get_user_labels(ea):
         user_labels = ida_hexrays.restore_user_labels(ea)
@@ -407,7 +460,10 @@ class MyHexRaysHooks(ida_idp.IDB_Hooks):
     def _print_user_lvar_settings(self, ea):
         lvar_settings = MyHexRaysHooks._get_user_lvar_settings(ea)
         if lvar_settings != self._lvar_settings:
-            print("HexRays: Detected a user lvars settings at 0x%x: %s" % (ea, lvar_settings))
+            print(
+                "HexRays: Detected a user lvars settings at 0x%x: %s"
+                % (ea, lvar_settings)
+            )
             self._lvar_settings = lvar_settings
         else:
             print("HexRays: Detected a user lvars settings SKIPPED")
@@ -454,6 +510,7 @@ class MyHexRaysHooks(ida_idp.IDB_Hooks):
             self._numforms = numforms
         else:
             print("HexRays: Detected a user numforms SKIPPED")
+
 
 idb_hooks = MyIDBHooks()
 idb_hooks.hook()

@@ -31,6 +31,7 @@ fDebug = False
 if fDebug:
     import pydevd_pycharm
 import sys
+
 sys.setrecursionlimit(10000)
 
 from . import events as evt  # noqa: I100,I202
@@ -53,8 +54,9 @@ class Hooks(object):
         if ida_auto.get_auto_state() == ida_auto.AU_NONE:
             self._plugin.network.send_packet(event)
         else:
-            #self._plugin.logger.debug("Ignoring a packet")
+            # self._plugin.logger.debug("Ignoring a packet")
             pass
+
 
 # See idasdk74.zip: idasdk74/include/idp.hpp for methods' documentation
 # See C:\Program Files\IDA Pro 7.4\python\3\ida_idp.py for methods' prototypes
@@ -78,18 +80,28 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         # self._plugin.logger.trace(self._plugin.core.local_type_map)
         for i in range(1, ida_typeinf.get_ordinal_count(ida_typeinf.get_idati())):
             t = ImportLocalType(i)
-            if t and t.name and idc.get_struc_id(t.name) == ida_idaapi.BADADDR and idc.get_enum(t.name) == ida_idaapi.BADADDR:
+            if (
+                t
+                and t.name
+                and idc.get_struc_id(t.name) == ida_idaapi.BADADDR
+                and idc.get_enum(t.name) == ida_idaapi.BADADDR
+            ):
                 if i in self._plugin.core.local_type_map:
                     t_old = self._plugin.core.local_type_map[i]
                     if t_old and not t.isEqual(t_old):
-                        changed_types.append((t_old.to_tuple(),t.to_tuple()))
+                        changed_types.append((t_old.to_tuple(), t.to_tuple()))
                     elif t_old is None and i in self._plugin.core.delete_candidates:
                         if not self._plugin.core.delete_candidates[i].isEqual(t):
-                            changed_types.append((self._plugin.core.delete_candidates[i].to_tuple(), t.to_tuple()))
+                            changed_types.append(
+                                (
+                                    self._plugin.core.delete_candidates[i].to_tuple(),
+                                    t.to_tuple(),
+                                )
+                            )
                         del self._plugin.core.delete_candidates[i]
 
                 else:
-                    changed_types.append((None,t.to_tuple()))
+                    changed_types.append((None, t.to_tuple()))
             if t is None:
                 assert i in self._plugin.core.local_type_map
                 if i in self._plugin.core.local_type_map:
@@ -97,15 +109,29 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
                     if t_old != t:
                         self._plugin.core.delete_candidates[i] = t_old
                     elif i in self._plugin.core.delete_candidates:
-                        #changed_types.append((self._plugin.core.delete_candidates[i],None))
+                        # changed_types.append((self._plugin.core.delete_candidates[i],None))
                         del self._plugin.core.delete_candidates[i]
 
                     # t_old = self._plugin.core.local_type_map[i]
                     # changed_types.append((t_old,None))
         # self._plugin.logger.trace(changed_types)
         if fDebug:
-            pydevd_pycharm.settrace('localhost', port=2233, stdoutToServer=True, stderrToServer=True, suspend=False)
-        self._plugin.logger.trace("Changed_types: %s"%list(map(lambda x: (x[0][0] if x[0] else None, x[1][0] if x[1] else None),changed_types)))
+            pydevd_pycharm.settrace(
+                "localhost",
+                port=2233,
+                stdoutToServer=True,
+                stderrToServer=True,
+                suspend=False,
+            )
+        self._plugin.logger.trace(
+            "Changed_types: %s"
+            % list(
+                map(
+                    lambda x: (x[0][0] if x[0] else None, x[1][0] if x[1] else None),
+                    changed_types,
+                )
+            )
+        )
         if len(changed_types) > 0:
             self._send_packet(evt.LocalTypesChangedEvent(changed_types))
         self._plugin.core.update_local_types_map()
@@ -167,12 +193,20 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         # return 0
 
     def ti_changed(self, ea, type, fname):
-        self._plugin.logger.debug("ti_changed(ea = 0x%X, type = %s, fname = %s)" % (ea, type, fname))
+        self._plugin.logger.debug(
+            "ti_changed(ea = 0x%X, type = %s, fname = %s)" % (ea, type, fname)
+        )
         name = ""
         if idc.is_member_id(ea):
             name = idc.get_struc_name(ea)
         type = ida_typeinf.idc_get_type_raw(ea)
-        self._send_packet(evt.TiChangedEvent(ea, (ParseTypeString(type[0]) if type else [], type[1] if type else None), name))
+        self._send_packet(
+            evt.TiChangedEvent(
+                ea,
+                (ParseTypeString(type[0]) if type else [], type[1] if type else None),
+                name,
+            )
+        )
         return 0
 
     def op_ti_changed(self, ea, n, type, fnames):
@@ -180,7 +214,8 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         return 0
 
     def op_type_changed(self, ea, n):
-        self._plugin.logger.debug("op_type_changed(ea = %x, n = %d)" % (ea,n))
+        self._plugin.logger.debug("op_type_changed(ea = %x, n = %d)" % (ea, n))
+
         def gather_enum_info(ea, n):
             id = ida_bytes.get_enum_id(ea, n)[0]
             serial = idc.get_enum_idx(id)
@@ -190,6 +225,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         mask = ida_bytes.MS_0TYPE if not n else ida_bytes.MS_1TYPE
         flags = ida_bytes.get_full_flags(ea)
         self._plugin.logger.debug("op_type_changed: flags = 0x%X)" % flags)
+
         def is_flag(type):
             return flags & mask == mask & type
 
@@ -215,9 +251,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
             op = "struct"
             path = ida_pro.tid_array(1)
             delta = ida_pro.sval_pointer()
-            path_len = ida_bytes.get_stroff_path(
-                path.cast(), delta.cast(), ea, n
-            )
+            path_len = ida_bytes.get_stroff_path(path.cast(), delta.cast(), ea, n)
             spath = []
             for i in range(path_len):
                 sname = idc.get_struc_name(path[i])
@@ -270,9 +304,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         name = idc.get_enum_member_name(cid)
         value = idc.get_enum_member_value(cid)
         bmask = idc.get_enum_member_bmask(cid)
-        self._send_packet(
-            evt.EnumMemberCreatedEvent(ename, name, value, bmask)
-        )
+        self._send_packet(evt.EnumMemberCreatedEvent(ename, name, value, bmask))
         return 0
 
     # XXX - use enum_member_deleted(self, id, cid) instead?
@@ -281,9 +313,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         value = idc.get_enum_member_value(cid)
         serial = idc.get_enum_member_serial(cid)
         bmask = idc.get_enum_member_bmask(cid)
-        self._send_packet(
-            evt.EnumMemberDeletedEvent(ename, value, serial, bmask)
-        )
+        self._send_packet(evt.EnumMemberDeletedEvent(ename, value, serial, bmask))
         return 0
 
     def struc_created(self, tid):
@@ -307,7 +337,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         self._send_packet(evt.StrucRenamedEvent(oldname, newname))
         return 0
 
-    # XXX - use struc_expanded(self, sptr) instead 
+    # XXX - use struc_expanded(self, sptr) instead
     def expanding_struc(self, sptr, offset, delta):
         sname = idc.get_struc_name(sptr.id)
         self._send_packet(evt.ExpandingStrucEvent(sname, offset, delta))
@@ -407,9 +437,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
                 )
         else:
             self._send_packet(
-                evt.StrucMemberChangedEvent(
-                    sname, mptr.soff, mptr.eoff, flag, extra
-                )
+                evt.StrucMemberChangedEvent(sname, mptr.soff, mptr.eoff, flag, extra)
             )
         return 0
 
@@ -421,9 +449,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
             sname = fullname
             smname = ""
         cmt = idc.get_struc_cmt(id, repeatable_cmt)
-        self._send_packet(
-            evt.StrucCmtChangedEvent(sname, smname, cmt, repeatable_cmt)
-        )
+        self._send_packet(evt.StrucCmtChangedEvent(sname, smname, cmt, repeatable_cmt))
         return 0
 
     def segm_added(self, s):
@@ -465,9 +491,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
         return 0
 
     def segm_attrs_updated(self, s):
-        self._send_packet(
-            evt.SegmAttrsUpdatedEvent(s.start_ea, s.perm, s.bitness)
-        )
+        self._send_packet(evt.SegmAttrsUpdatedEvent(s.start_ea, s.perm, s.bitness))
         return 0
 
     def segm_moved(self, from_ea, to_ea, size, changed_netmap):
@@ -496,9 +520,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
 
     def func_tail_appended(self, func, tail):
         self._send_packet(
-            evt.FuncTailAppendedEvent(
-                func.start_ea, tail.start_ea, tail.end_ea
-            )
+            evt.FuncTailAppendedEvent(func.start_ea, tail.start_ea, tail.end_ea)
         )
         return 0
 
@@ -526,28 +548,39 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
     #     return 0
 
     def make_data(self, ea, flags, tid, size):
-        self._plugin.logger.debug("make_data(ea = %x, flags = %x, tid = %x, size = %x)" % (ea, flags, tid, size))
+        self._plugin.logger.debug(
+            "make_data(ea = %x, flags = %x, tid = %x, size = %x)"
+            % (ea, flags, tid, size)
+        )
         # Note: MakeDataEvent.sname == '' is convention for BADNODE
-        self._send_packet(evt.MakeDataEvent(ea, flags, size, idc.get_struc_name(tid) if tid != ida_netnode.BADNODE else ''))
+        self._send_packet(
+            evt.MakeDataEvent(
+                ea,
+                flags,
+                size,
+                idc.get_struc_name(tid) if tid != ida_netnode.BADNODE else "",
+            )
+        )
         return 0
 
     def renamed(self, ea, new_name, local_name):
-        self._plugin.logger.debug("renamed(ea = %x, new_name = %s, local_name = %d)" % (ea, new_name, local_name))
+        self._plugin.logger.debug(
+            "renamed(ea = %x, new_name = %s, local_name = %d)"
+            % (ea, new_name, local_name)
+        )
         # `idc.get_struc` was removed in newer IDA Python APIs; avoid calling it.
         # We only need to detect member-id or enum rename events here.
         if idc.is_member_id(ea) or idc.get_enum_name(ea):
             # Drop hook to avoid duplicate since already handled by the following hooks:
             # - renaming_struc_member() -> sends 'StrucMemberRenamedEvent'
-            # - renaming_struc() -> sends 'StrucRenamedEvent' 
-            # - renaming_enum() -> sends 'EnumRenamedEvent' 
-            return 0 
+            # - renaming_struc() -> sends 'StrucRenamedEvent'
+            # - renaming_enum() -> sends 'EnumRenamedEvent'
+            return 0
         self._send_packet(evt.RenamedEvent(ea, new_name, local_name))
         return 0
 
     def byte_patched(self, ea, old_value):
-        self._send_packet(
-            evt.BytePatchedEvent(ea, ida_bytes.get_wide_byte(ea))
-        )
+        self._send_packet(evt.BytePatchedEvent(ea, ida_bytes.get_wide_byte(ea)))
         return 0
 
     def cmt_changed(self, ea, repeatable_cmt):
@@ -566,7 +599,7 @@ class IDBHooks(Hooks, ida_idp.IDB_Hooks):
 
     def item_color_changed(self, ea, color):
         # See #31 on fidgetingbits/IDArling
-        #self._plugin.logger.debug("item_color_changed() not implemented yet")
+        # self._plugin.logger.debug("item_color_changed() not implemented yet")
         return 0
 
     def callee_addr_changed(self, ea, callee):
@@ -629,7 +662,7 @@ class HexRaysHooks(Hooks):
         self._installed = False
         # We cache all HexRays data the first time we encounter a new function
         # and only send events to IDArling server if we didn't encounter the
-        # specific data for a given function. This is just an optimization to 
+        # specific data for a given function. This is just an optimization to
         # reduce the amount of messages sent and replicated to other users
         self._cached_funcs = {}
 
@@ -658,7 +691,7 @@ class HexRaysHooks(Hooks):
             func = ida_funcs.get_func(ea)
             if func is None:
                 return 0
-            
+
             if func.start_ea not in self._cached_funcs.keys():
                 self._cached_funcs[func.start_ea] = {}
                 self._cached_funcs[func.start_ea]["labels"] = []
@@ -859,14 +892,16 @@ class HexRaysHooks(Hooks):
 
 
 class UIHooks(Hooks, ida_kernwin.UI_Hooks):
-    def __init__(self,plugin):
+    def __init__(self, plugin):
         ida_kernwin.UI_Hooks.__init__(self)
         Hooks.__init__(self, plugin)
         self.actions = []
 
     def preprocess_action(self, name):
         ea = ida_kernwin.get_screen_ea()
-        self._plugin.logger.debug("preprocess_action(name = %s). ea = 0x%X." % (name, ea))
+        self._plugin.logger.debug(
+            "preprocess_action(name = %s). ea = 0x%X." % (name, ea)
+        )
         if name == "MakeUnknown":
             self.actions.append((name, ea))
         elif name == "MakeCode":

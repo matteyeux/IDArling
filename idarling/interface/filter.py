@@ -135,12 +135,12 @@ class EventFilter(QObject):
         # So we will need to properly fix it to re-enable the easter egg
         #
         # Is it a QShowEvent on a QDialog named "Dialog"?
-        #if (
+        # if (
         #    ev.__class__ == ev,
         #    QShowEvent
         #    and obj.__class__ == QDialog
         #    and obj.windowTitle() == "About",
-        #):
+        # ):
         #    # Find a child QGroupBox
         #    for groupBox in obj.children():
         #        if groupBox.__class__ == QGroupBox:
@@ -167,11 +167,7 @@ class EventFilter(QObject):
                 self._intercept = False
 
         # Is it a ToolTip event on a QWidget with a parent?
-        if (
-            ev.type() == QEvent.ToolTip
-            and obj.__class__ == QWidget
-            and obj.parent()
-        ):
+        if ev.type() == QEvent.ToolTip and obj.__class__ == QWidget and obj.parent():
             table_view = obj.parent()
             # Is it a QTableView with a parent?
             if table_view.__class__ == QTableView and table_view.parent():

@@ -139,9 +139,7 @@ class ServerClient(ClientSocket):
 
         elif isinstance(packet, Event):
             if not self._project or not self._binary or not self._snapshot:
-                self._logger.warning(
-                    "Received a packet from an unsubscribed client"
-                )
+                self._logger.warning("Received a packet from an unsubscribed client")
                 return True
 
             # Check for de-synchronization
@@ -162,7 +160,11 @@ class ServerClient(ClientSocket):
             if packet.tick and interval and packet.tick % interval == 0:
 
                 def file_downloaded(reply):
-                    file_name = "%s_%s_%s.i64" % (self._project, self._binary, self._snapshot)
+                    file_name = "%s_%s_%s.i64" % (
+                        self._project,
+                        self._binary,
+                        self._snapshot,
+                    )
                     file_path = self.parent().server_file(file_name)
 
                     # Write the file to disk
@@ -198,25 +200,46 @@ class ServerClient(ClientSocket):
                 db_update_locked = self.parent().db_update_lock.acquire(blocking=False)
                 self.parent().client_lock.release()
                 if db_update_locked:
-                    self.parent().storage.update_binary_name(query.project, query.old_name, query.new_name)
-                    self.parent().storage.update_snapshot_binary(query.project, query.old_name, query.new_name)
-                    self.parent().storage.update_events_binary(query.project, query.old_name, query.new_name)
+                    self.parent().storage.update_binary_name(
+                        query.project, query.old_name, query.new_name
+                    )
+                    self.parent().storage.update_snapshot_binary(
+                        query.project, query.old_name, query.new_name
+                    )
+                    self.parent().storage.update_events_binary(
+                        query.project, query.old_name, query.new_name
+                    )
 
-                    # We just changed the table entries so be sure to use new names 
+                    # We just changed the table entries so be sure to use new names
                     # for queries
-                    snapshots = self.parent().storage.select_snapshots(query.project, query.new_name)
+                    snapshots = self.parent().storage.select_snapshots(
+                        query.project, query.new_name
+                    )
                     for snapshot in snapshots:
-                        old_file_name = "%s_%s_%s.i64" % (query.project, query.old_name, snapshot.name)
-                        new_file_name = "%s_%s_%s.i64" % (query.project, query.new_name, snapshot.name)
+                        old_file_name = "%s_%s_%s.i64" % (
+                            query.project,
+                            query.old_name,
+                            snapshot.name,
+                        )
+                        new_file_name = "%s_%s_%s.i64" % (
+                            query.project,
+                            query.new_name,
+                            snapshot.name,
+                        )
                         old_file_path = self.parent().server_file(old_file_name)
                         new_file_path = self.parent().server_file(new_file_name)
-                        # If a rename happens before a file is uploaded, the 
+                        # If a rename happens before a file is uploaded, the
                         # idb won't exist
                         if os.path.exists(old_file_path):
-                            self._logger.info("Renaming: %s to %s" % (old_file_path, new_file_name))
+                            self._logger.info(
+                                "Renaming: %s to %s" % (old_file_path, new_file_name)
+                            )
                             os.rename(old_file_path, new_file_path)
                         else:
-                            self._logger.warning("Skipping file rename due to non existing file: %s" % old_file_path)
+                            self._logger.warning(
+                                "Skipping file rename due to non existing file: %s"
+                                % old_file_path
+                            )
 
                     self.parent().db_update_lock.release()
                 else:
@@ -261,11 +284,21 @@ class ServerClient(ClientSocket):
         self.parent().storage.insert_snapshot(query.snapshot)
         self.send_packet(CreateSnapshot.Reply(query))
 
+    def _server_file_ext(self, project, binary_name):
+        """Pick the on-disk extension for a binary based on its type."""
+        binaries = self.parent().storage.select_binaries(project, binary_name, 1)
+        if binaries and (binaries[0].type or "").upper() == "BNDB":
+            return "bndb"
+        return "i64"
+
     def _handle_upload_file(self, query):
         snapshot = self.parent().storage.select_snapshot(
             query.project, query.binary, query.snapshot
         )
-        file_name = "%s_%s_%s.i64" % (query.project, snapshot.binary, snapshot.name)
+        ext = self._server_file_ext(query.project, snapshot.binary)
+        file_name = "%s_%s_%s.%s" % (
+            query.project, snapshot.binary, snapshot.name, ext
+        )
         file_path = self.parent().server_file(file_name)
 
         # Write the file received to disk
@@ -279,8 +312,22 @@ class ServerClient(ClientSocket):
         snapshot = self.parent().storage.select_snapshot(
             query.project, query.binary, query.snapshot
         )
-        file_name = "%s_%s_%s.i64" % (query.project, snapshot.binary, snapshot.name)
+        ext = self._server_file_ext(query.project, snapshot.binary)
+        file_name = "%s_%s_%s.%s" % (
+            query.project, snapshot.binary, snapshot.name, ext
+        )
         file_path = self.parent().server_file(file_name)
+        # Fall back to the other extension for files saved before the
+        # per-type extension change landed (e.g. a BNDB written as .i64).
+        if not os.path.exists(file_path):
+            other = "i64" if ext == "bndb" else "bndb"
+            alt_name = "%s_%s_%s.%s" % (
+                query.project, snapshot.binary, snapshot.name, other
+            )
+            alt_path = self.parent().server_file(alt_name)
+            if os.path.exists(alt_path):
+                file_name = alt_name
+                file_path = alt_path
 
         # Read file from disk and sent it
         reply = DownloadFile.Reply(query)
@@ -376,7 +423,11 @@ class ServerClient(ClientSocket):
         def match_project(user, project):
             return user.project == project
 
-        if  len(self.parent().get_users(self,partial(match_project, project=packet.project))):
+        if len(
+            self.parent().get_users(
+                self, partial(match_project, project=packet.project)
+            )
+        ):
             self.send_packet(DeleteProject.Reply(packet, False))
         else:
             self._delete_project_files(packet.project)
@@ -384,11 +435,15 @@ class ServerClient(ClientSocket):
             # self.parent().forward_users(self,packet,partial(match_project,project=packet.project))
             self.send_packet(DeleteProject.Reply(packet, True))
 
-    def _handle_delete_binary(self,packet):
+    def _handle_delete_binary(self, packet):
         def match_user(user, project, binary):
             return user.project == project and user.binary == binary
 
-        if  len(self.parent().get_users(self, partial(match_user, project=packet.project, binary=packet.binary))):
+        if len(
+            self.parent().get_users(
+                self, partial(match_user, project=packet.project, binary=packet.binary)
+            )
+        ):
             self.send_packet(DeleteBinary.Reply(packet, False))
         else:
             self._delete_binary_files(packet.project, packet.binary)
@@ -398,27 +453,47 @@ class ServerClient(ClientSocket):
 
     def _handle_delete_snapshot(self, packet):
         def match_user(user, project, binary, snapshot):
-            return user.project == project and user.binary == binary and user.snapshot == snapshot
+            return (
+                user.project == project
+                and user.binary == binary
+                and user.snapshot == snapshot
+            )
 
-        if len(self.parent().get_users(self,partial(match_user, project=packet.project, binary=packet.binary,snapshot=packet.snapshot))):
+        if len(
+            self.parent().get_users(
+                self,
+                partial(
+                    match_user,
+                    project=packet.project,
+                    binary=packet.binary,
+                    snapshot=packet.snapshot,
+                ),
+            )
+        ):
             self.send_packet(DeleteSnapshot.Reply(packet, False))
         else:
             self._delete_snapshot_files(packet.project, packet.binary, packet.snapshot)
-            self.parent().storage.delete_snapshot(packet.project, packet.binary, packet.snapshot)
+            self.parent().storage.delete_snapshot(
+                packet.project, packet.binary, packet.snapshot
+            )
             # self.parent().forward_users(self, packet)
             self.send_packet(DeleteSnapshot.Reply(packet, True))
 
-class Migrate(object):
 
+class Migrate(object):
     # This migration typically took ~2h with a database with 140k+ events
     def do1(server):
-        server._logger.warning("Migration do1(), please don't interrupt that process...")
+        server._logger.warning(
+            "Migration do1(), please don't interrupt that process..."
+        )
 
         server._logger.warning("Migration do1(): saving old db...")
         if os.path.exists(server.server_file("database_1.db")):
             server._logger.error("Migration do1(): database_1.db already exist!")
             sys.exit(1)
-        os.rename(server.server_file("database.db"), server.server_file("database_1.db"))
+        os.rename(
+            server.server_file("database.db"), server.server_file("database_1.db")
+        )
 
         server._logger.warning("Migration do1(): loading old db...")
         old_storage = Storage(server.server_file("database_1.db"))
@@ -460,6 +535,7 @@ class Migrate(object):
             i += 1
 
         server._logger.warning("Migration do1(): done")
+
 
 class Server(ServerSocket):
     """
@@ -651,9 +727,8 @@ class Server(ServerSocket):
         """Get the other users on the same snapshot."""
         users = []
         for user in self._clients:
-            if (matches is None and
-                (user.binary != client.binary
-                or user.snapshot != client.snapshot)
+            if matches is None and (
+                user.binary != client.binary or user.snapshot != client.snapshot
             ):
                 continue
             if user == client or (matches and not matches(user)):

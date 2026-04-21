@@ -1,0 +1,21 @@
+{
+    "pluginmetadataversion": 2,
+    "name": "bnarling",
+    "type": ["ui", "helper"],
+    "api": ["python3"],
+    "description": "Collaborative reverse engineering in Binary Ninja, powered by the idarling server.",
+    "longdescription": "Port of the IDArling client for Binary Ninja. Connects to an idarling server so BN users can share presence, cursor positions, and invites with IDA Pro or other BN users in the same session.",
+    "license": {
+        "name": "GPL-3.0",
+        "text": "Released under the GNU General Public License v3."
+    },
+    "platforms": ["Darwin", "Linux", "Windows"],
+    "installinstructions": {
+        "Darwin": "Drop the bnarling folder into ~/Library/Application Support/Binary Ninja/plugins/",
+        "Linux": "Drop the bnarling folder into ~/.binaryninja/plugins/",
+        "Windows": "Drop the bnarling folder into %APPDATA%/Binary Ninja/plugins/"
+    },
+    "version": "0.0.1",
+    "author": "Ported from IDArling",
+    "minimumbinaryninjaversion": 4000
+}

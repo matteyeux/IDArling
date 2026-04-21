@@ -47,7 +47,9 @@ ida_lines.add_extra_cmt(0x78DE7B30, 0, "next comment")
 # XXX - LocalTypesChangedEvent
 # XXX - OpTypeChangedEvent
 
-print("[+] Change the argument: 0C000000D hexadecimal to decimal at 0x78DBB46A in assembly  -> OpTypeChangedEvent")
+print(
+    "[+] Change the argument: 0C000000D hexadecimal to decimal at 0x78DBB46A in assembly  -> OpTypeChangedEvent"
+)
 op_dec(0x78DBB46A, 1)
 
 print("[+] Create an enum -> EnumCreatedEvent")
@@ -57,7 +59,7 @@ ida_enum.add_enum(BADADDR, "test_enum_name_to_delete", 0)
 
 print("[+] Delete an enum -> EnumDeletedEvent")
 ida_enum.del_enum(ida_enum.get_enum("test_enum_name_to_delete"))
-        
+
 print("[+] Rename an enum -> EnumRenamedEvent")
 enum = ida_enum.get_enum("test_enum_name_to_rename")
 ida_enum.set_enum_name(enum, "test_enum_renamed")
@@ -90,10 +92,10 @@ ida_struct.set_struc_name(struc, "_UNICODE_STRING_RENAMED")
 # XXX - StrucCmtChangedEvent
 
 # XXX - StrucMemberCreatedEvent
-#struc = ida_struct.get_struc_id("test_struct_name")
-#sptr = ida_struct.get_struc(struc)
-#ida_struct.add_struc_member(sptr, "field_0", 0x0, ida_bytes.qword_flag(), ida_nalt.opinfo_t(), 4)
-        
+# struc = ida_struct.get_struc_id("test_struct_name")
+# sptr = ida_struct.get_struc(struc)
+# ida_struct.add_struc_member(sptr, "field_0", 0x0, ida_bytes.qword_flag(), ida_nalt.opinfo_t(), 4)
+
 # XXX - StrucMemberChangedEvent
 # XXX - StrucMemberDeletedEvent
 # XXX - StrucMemberRenamedEvent
@@ -115,8 +117,13 @@ del_items(0x78DBDCB0)
 
 # XXX - UserLabelsEvent
 
-print("[+] Defining 2 comments in HexRays window in function defined at 0x78DBB091 -> UserCmtsEvent")
-list_comments = [((0x78DBB06A, 74), 'one comment in HexRays'), ((0x78DBB091, 74), 'another comment in HexRays')]
+print(
+    "[+] Defining 2 comments in HexRays window in function defined at 0x78DBB091 -> UserCmtsEvent"
+)
+list_comments = [
+    ((0x78DBB06A, 74), "one comment in HexRays"),
+    ((0x78DBB091, 74), "another comment in HexRays"),
+]
 cmts = ida_hexrays.user_cmts_new()
 for (tl_ea, tl_itp), cmt in list_comments:
     tl = ida_hexrays.treeloc_t()

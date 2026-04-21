@@ -104,22 +104,40 @@ class Storage(object):
 
     def select_binaries(self, project=None, name=None, limit=None):
         """Select the binaries with the given project and name."""
-        results = self._select(
-            "binaries", {"project": project, "name": name}, limit
-        )
+        results = self._select("binaries", {"project": project, "name": name}, limit)
         return [Binary(**result) for result in results]
 
-    def update_binary_name(self, project=None, old_name=None, new_name=None, limit=None):
+    def update_binary_name(
+        self, project=None, old_name=None, new_name=None, limit=None
+    ):
         """Update a binary with the given new name."""
-        self._update("binaries", "name", new_name, {"project": project, "name": old_name}, limit)
+        self._update(
+            "binaries", "name", new_name, {"project": project, "name": old_name}, limit
+        )
 
-    def update_snapshot_binary(self, project=None, old_name=None, new_name=None, limit=None):
+    def update_snapshot_binary(
+        self, project=None, old_name=None, new_name=None, limit=None
+    ):
         """Update a binary with the given new name."""
-        self._update("snapshots", "binary", new_name, {"project": project, "binary": old_name}, limit)
+        self._update(
+            "snapshots",
+            "binary",
+            new_name,
+            {"project": project, "binary": old_name},
+            limit,
+        )
 
-    def update_events_binary(self, project=None, old_name=None, new_name=None, limit=None):
+    def update_events_binary(
+        self, project=None, old_name=None, new_name=None, limit=None
+    ):
         """Update a binary with the given new name."""
-        self._update("events", "binary", new_name, {"project": project, "binary": old_name}, limit)
+        self._update(
+            "events",
+            "binary",
+            new_name,
+            {"project": project, "binary": old_name},
+            limit,
+        )
 
     def insert_snapshot(self, snapshot):
         """Insert a new snapshot into the database."""
@@ -169,18 +187,24 @@ class Storage(object):
     def last_tick(self, project, binary, snapshot):
         """Get the last tick of the specified binary and snapshot."""
         c = self._conn.cursor()
-        sql = "select tick from events where project = ? and binary = ? and snapshot = ? "
+        sql = (
+            "select tick from events where project = ? and binary = ? and snapshot = ? "
+        )
         sql += "order by tick desc limit 1;"
         c.execute(sql, [project, binary, snapshot])
         result = c.fetchone()
         return result["tick"] if result else 0
 
     def delete_events(self, project, binary, snapshot):
-        self._delete("events", {"project": project, "binary": binary, "snapshot": snapshot})
+        self._delete(
+            "events", {"project": project, "binary": binary, "snapshot": snapshot}
+        )
 
     def delete_snapshot(self, project, binary, snapshot):
         self.delete_events(project, binary, snapshot)
-        self._delete("snapshots", {"project": project, "binary": binary, "name": snapshot})
+        self._delete(
+            "snapshots", {"project": project, "binary": binary, "name": snapshot}
+        )
 
     def delete_binary(self, project, binary):
         self._delete("events", {"project": project, "binary": binary})
@@ -226,9 +250,8 @@ class Storage(object):
         if len(fields):
             cols = ["{} = ?".format(col) for col in fields.keys()]
             sql = (sql + " where {}").format(" and ".join(cols))
-        sql +=  ";"
+        sql += ";"
         c.execute(sql, list(fields.values()))
-
 
     def _update(self, table, field, new_value, search_fields, limit=None):
         """Update the field in a table matching the given search fields."""
@@ -240,8 +263,8 @@ class Storage(object):
             sql = (sql + " where {}").format(" and ".join(cols))
         sql += " limit {};".format(limit) if limit else ";"
         conditions = [new_value] + list(search_fields.values())
-        #print(sql)
-        #print(conditions)
+        # print(sql)
+        # print(conditions)
         c.execute(sql, conditions)
         return c.fetchall()
 

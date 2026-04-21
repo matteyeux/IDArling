@@ -91,8 +91,8 @@ class Painter(QObject):
         # There is a bug in IDA: with a huge number of segments, all the navbar
         # is colored with the user color. This will be resolved in IDA 7.2.
         # XXX - commented as error while loading in IDA >= 7.3
-        #cursors = self._plugin.config["cursors"]
-        #if cursors["navbar"]:
+        # cursors = self._plugin.config["cursors"]
+        # if cursors["navbar"]:
         #    for user in self._plugin.core.get_users().values():
         #        # Cursor color
         #        if ea - nbytes * 2 <= user["ea"] <= ea + nbytes * 2:
@@ -100,15 +100,13 @@ class Painter(QObject):
         #        # Cursor borders
         #        if ea - nbytes * 4 <= user["ea"] <= ea + nbytes * 4:
         #            return long(0)
-        orig = ida_kernwin.call_nav_colorizer(
-            self._ida_nav_colorizer, ea, nbytes
-        )
+        orig = ida_kernwin.call_nav_colorizer(self._ida_nav_colorizer, ea, nbytes)
         return long(orig)
 
     def ready_to_run(self):
         # The default nav colorized can only be recovered once!
         # XXX - commented, see above
-        #ida_nav_colorizer = ida_kernwin.set_nav_colorizer(self.nav_colorizer)
+        # ida_nav_colorizer = ida_kernwin.set_nav_colorizer(self.nav_colorizer)
         ida_nav_colorizer = None
         if ida_nav_colorizer is not None:
             self._ida_nav_colorizer = ida_nav_colorizer
